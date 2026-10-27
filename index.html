@@ -77,7 +77,6 @@ button{cursor:pointer}
 .tab{flex:1;border:0;background:transparent;padding:9px 6px;border-radius:9px;font-weight:500;color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .search{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:14px}
-.gallery-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}.gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.gallery-card{position:relative;overflow:hidden;border:1px solid var(--line);background:var(--surface);border-radius:13px}.gallery-card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--surface2)}.gallery-meta{padding:9px 10px}.gallery-title{font-weight:600;overflow-wrap:anywhere}.gallery-sub{font-size:12px;color:var(--muted);margin-top:3px}.gallery-actions{display:flex;gap:6px;margin-top:8px}.gallery-actions .btn{flex:1;padding:6px 8px;font-size:12px}.gallery-empty{padding:22px 16px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted)}.gallery-label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}.gallery-input{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
 
 /* log */
 .month{margin-top:18px}
@@ -201,6 +200,35 @@ button.bar-row{width:100%;text-align:left;border:0;background:transparent;paddin
 body{margin:0;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg)}
 .wrap{padding-top:max(14px,env(safe-area-inset-top,0px))}
+
+/* stage 1: hero art, scrollable tabs, gallery */
+.tabs{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;white-space:nowrap;padding-left:14px;padding-right:14px}
+.hero.art .hero-img{aspect-ratio:1536/820;object-position:center}
+.hero.art .hero-shade{background:linear-gradient(180deg,rgba(5,12,14,.5) 0%,rgba(5,12,14,0) 24%)}
+.hero.art .hero-eyebrow,.hero.art .hero-bottom{display:none}
+.hero.art .hero-top{justify-content:flex-end}
+.art-strip{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 18px;background:#0B1416;color:#fff;font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:.01em}
+.gal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.gal-head .cnt{font-size:14px;color:var(--muted)}
+.gal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gal-item{position:relative;display:block;width:100%;aspect-ratio:1/1;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface2)}
+.gal-item img{display:block;width:100%;height:100%;object-fit:cover}
+.gal-item.cur::after{content:"Шапка";position:absolute;left:6px;bottom:6px;padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-size:11px}
+.lb-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:10px 16px 0}
+.lb-actions .btn.danger{background:rgba(0,0,0,.35)}
+.lb-actions .btn.danger.armed{background:var(--danger);color:var(--bg)}
+
+/* stage 2: receipts */
+.rc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.rc-grid:empty{display:none}
+.rc{display:flex;flex-direction:column;gap:6px;min-width:0}
+.rc .thumb-lg,.rc-view{display:block;width:100%;aspect-ratio:1/1;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface2)}
+.rc .thumb-lg img,.rc-view img{display:block;width:100%;height:100%;object-fit:cover}
+.rc .rm{width:100%;min-height:40px;padding:6px 4px}
+.rc .rm.armed{background:var(--danger);border-color:var(--danger);color:var(--bg)}
+.rc-add{width:100%;min-height:46px;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -209,7 +237,7 @@ html{background:var(--bg)}
 <main class="wrap">
   <header class="masthead">
     <div class="hero">
-      <img class="hero-img" src="car-hero.jpg" alt="" decoding="async">
+      <img class="hero-img" src="hero-art.jpg" alt="" decoding="async">
       <div class="hero-shade" aria-hidden="true"></div>
       <div class="hero-top">
         <span class="hero-eyebrow">Сервисная книжка</span>
@@ -226,6 +254,7 @@ html{background:var(--bg)}
         <h1 id="carName">Golf IV</h1>
         <div class="hero-tags" id="carTag"></div>
       </div>
+      <div class="art-strip" id="artStrip" hidden></div>
     </div>
     <div class="dash">
       <div class="odo" id="odo" aria-label="Пробег"></div>
@@ -237,9 +266,9 @@ html{background:var(--bg)}
   <div class="tabs" role="tablist" aria-label="Разделы">
     <button class="tab" role="tab" data-tab="log" aria-selected="true">Журнал</button>
     <button class="tab" role="tab" data-tab="parts" aria-selected="false">Запчасти</button>
-    <button class="tab" role="tab" data-tab="gallery" aria-selected="false">Галерея</button>
     <button class="tab" role="tab" data-tab="stats" aria-selected="false">Итоги</button>
     <button class="tab" role="tab" data-tab="rem" aria-selected="false">Напоминания</button>
+    <button class="tab" role="tab" data-tab="gallery" aria-selected="false">Галерея</button>
   </div>
   <input class="search" id="search" type="search" placeholder="Поиск по записям и запчастям" aria-label="Поиск" autocomplete="off">
   <div id="view"></div>
@@ -255,11 +284,13 @@ html{background:var(--bg)}
 <div class="toast" id="toast" role="status" hidden></div>
 <input type="file" id="photoInput" accept="image/*" hidden>
 <input type="file" id="galleryInput" accept="image/*" multiple hidden>
+<input type="file" id="receiptInput" accept="image/*" multiple hidden>
 <input type="file" id="restoreInput" accept=".json,application/json" hidden>
 <div class="lightbox" id="lightbox" hidden>
   <div class="lb-top"><button type="button" class="btn small" data-act="closephoto">Закрыть</button></div>
   <div class="lb-stage" id="lbStage"><img id="lightboxImg" alt="Фото запчасти"></div>
   <div class="lb-cap" id="lbCap"></div>
+  <div class="lb-actions" id="lbActions" hidden><button type="button" class="btn small" data-act="lbhero">Сделать фото шапки</button><button type="button" class="btn small danger" data-act="lbdel">Удалить</button></div>
   <button type="button" class="lb-nav prev" data-act="lbprev" aria-label="Предыдущее фото">‹</button>
   <button type="button" class="lb-nav next" data-act="lbnext" aria-label="Следующее фото">›</button>
 </div>
@@ -282,7 +313,7 @@ var TITLE_HINTS = ['Замена масла и фильтров','Замена �
 
 var DEF_PROFILE = {car:'Golf IV', cur:'BYN', odo:0, tag:'Арлекино', photo:'', photoData:''};
 var state = {
-  entries: [], reminders: [], gallery: [],
+  entries: [], reminders: [],
   profile: Object.assign({}, DEF_PROFILE),
   tab: 'log', q: '', mode: 'local', loaded: false, expMonth: ''
 };
@@ -294,7 +325,12 @@ var photoTarget = null;
 
 /* ---------- local photo store (IndexedDB) + file saving ---------- */
 var blobCache = {};
-function blobUrl(id){ return id && blobCache[id] ? blobCache[id].url : ''; }
+var DEFAULT_GALLERY = ['app:g1','app:g2','app:g3','app:g4'];
+function blobUrl(id){
+  if (!id) return '';
+  if (id.indexOf('app:') === 0) return 'gallery/' + id.slice(4) + '.jpg';
+  return blobCache[id] ? blobCache[id].url : '';
+}
 var idbP = null;
 function idb(){
   if (!idbP) idbP = new Promise(function(res, rej){
@@ -309,9 +345,11 @@ function idb(){
 }
 function idbDo(mode, fn){
   return idb().then(function(db){ return new Promise(function(res, rej){
-    var tx = db.transaction('photos', mode), st = tx.objectStore('photos'), r = fn(st);
+    var tx, r;
+    function fail(er){ var e = new Error('idb'); e.code = er && er.name === 'QuotaExceededError' ? 'quota_exceeded' : 'quota_or_state'; rej(e); }
+    try { tx = db.transaction('photos', mode); r = fn(tx.objectStore('photos')); } catch(er){ fail(er); return; }
     tx.oncomplete = function(){ res(r && r.result); };
-    tx.onerror = tx.onabort = function(){ var e = new Error('idb'); e.code = 'quota_or_state'; rej(e); };
+    tx.onerror = tx.onabort = function(){ fail(tx.error); };
   }); });
 }
 function putPhoto(id, blob){
@@ -332,7 +370,7 @@ async function loadPhotos(){
   });
 }
 assetsApi = {
-  upload: async function(blob){ var id = 'p' + newId(); await putPhoto(id, blob); return {id: id}; },
+  upload: async function(blob, o){ var id = ((o && o.prefix) || 'p') + newId(); await putPhoto(id, blob); return {id: id}; },
   delete: async function(id){
     await idbDo('readwrite', function(st){ return st.delete(id); });
     if (blobCache[id]) { URL.revokeObjectURL(blobCache[id].url); delete blobCache[id]; }
@@ -378,7 +416,7 @@ function cat(e){ return CATS[e.cat] || CATS.other; }
 /* ---------- storage ---------- */
 function lsGet(k, d){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
-function cacheSave(){ lsSet('sk_entries', state.entries); lsSet('sk_reminders', state.reminders); lsSet('sk_profile', state.profile); lsSet('sk_gallery', state.gallery); }
+function cacheSave(){ lsSet('sk_entries', state.entries); lsSet('sk_reminders', state.reminders); lsSet('sk_profile', state.profile); }
 
 async function connect(){
   state.mode = 'local';
@@ -444,9 +482,13 @@ function stats(){
 /* ---------- render ---------- */
 function render(){
   $('#carName').textContent = state.profile.car || 'Моя машина';
-  var hi = $('.hero-img'), hs = customPhoto() || 'car-hero.jpg';
+  var cp = customPhoto(), hi = $('.hero-img'), hs = cp || 'hero-art.jpg';
   if (hi.getAttribute('src') !== hs) hi.setAttribute('src', hs);
+  $('.hero').classList.toggle('art', !cp);
   var tag = String(state.profile.tag == null ? '' : state.profile.tag).trim();
+  var nm = String(state.profile.car || '').trim(), showNm = nm && nm.toLowerCase() !== 'golf iv', strip = $('#artStrip');
+  strip.innerHTML = (showNm ? '<span>' + esc(nm) + '</span>' : '') + (tag ? '<span class="tagpill">' + esc(tag) + '</span>' : '');
+  strip.hidden = !(!cp && (showNm || tag));
   $('#carTag').innerHTML = tag ? '<span class="tagpill">' + esc(tag) + '</span>' : '';
   var st = stats();
   var digits = String(Math.round(st.maxOdo)).padStart(6, '0').split('');
@@ -458,8 +500,8 @@ function render(){
   var nx = nextRem(), nr = $('#nextRem');
   if (nx) { nr.hidden = false; nr.className = 'nextrem' + (nx.i.level === 2 ? ' late' : ''); nr.innerHTML = 'Ближайшее: <b>' + esc(nx.r.title) + '</b> — ' + esc(nx.i.text); }
   else nr.hidden = true;
-  var fab = $('.fab'), onRem = state.tab === 'rem', onGallery = state.tab === 'gallery';
-  fab.hidden = onGallery; fab.dataset.act = onRem ? 'newrem' : 'new'; fab.textContent = onRem ? '+ Напоминание' : '+ Запись';
+  var fab = $('.fab'), onRem = state.tab === 'rem', onGal = state.tab === 'gallery';
+  fab.dataset.act = onGal ? 'galadd' : onRem ? 'newrem' : 'new'; fab.textContent = onGal ? '+ Фото' : onRem ? '+ Напоминание' : '+ Запись';
   document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected', t.dataset.tab === state.tab ? 'true' : 'false'); });
   $('#search').hidden = state.tab === 'stats' || state.tab === 'rem' || state.tab === 'gallery';
   $('#foot').textContent = 'Всё хранится только на этом телефоне. Делайте резервную копию в разделе «Настройки».';
@@ -506,6 +548,8 @@ function entryRow(e){
   if (n) meta.push(n + ' ' + plural(n, 'запчасть', 'запчасти', 'запчастей'));
   var np = (e.parts || []).filter(function(p){ return p.photo; }).length;
   if (np) meta.push(np + ' фото');
+  var nr = receiptIds(e).length;
+  if (nr) meta.push(nr + ' ' + plural(nr, 'чек', 'чека', 'чеков'));
   var odo = num(e.odo) > 0 ? ' · ' + fmtKm(num(e.odo)) + ' км' : '';
   return '<li><button class="entry" data-id="' + esc(e.id) + '" style="--cat:var(' + c.c + ')">' +
     '<span><span class="e-date">' + esc(fmtDate(e.date)) + odo + '</span>' +
@@ -586,7 +630,7 @@ function openSheet(title, html){
 function closeSheet(){
   $('#sheet').hidden = true; $('#backdrop').hidden = true;
   document.body.classList.remove('lock');
-  resetArm(); abandonUploads();
+  resetArm(); rcResetArm(); abandonUploads();
 }
 function photoCtl(id){
   if (id) {
@@ -620,6 +664,9 @@ function openEntry(id){
     '<div class="parts-h"><span>Запчасти</span><button type="button" class="btn small" data-act="addpart">+ Добавить</button></div>' +
     '<div class="cols-h"><span>Название</span><span>Кол-во</span><span>Цена за шт.</span><span></span></div>' +
     '<div id="parts">' + (v.parts || []).map(partRow).join('') + '</div>' +
+    '<div class="parts-h"><span>Чеки</span></div>' +
+    '<div class="rc-grid" id="rcpts">' + receiptIds(v).map(rcItem).join('') + '</div><p class="note" id="rcStatus" hidden></p>' +
+    '<button type="button" class="btn rc-add" data-act="addreceipt">+ Фото чека</button>' +
     '<label class="field"><span>Заметка</span><textarea id="f-note" placeholder="Артикул, гарантия, что заметили">' + esc(v.note || '') + '</textarea></label>' +
     '<div class="total"><span>Итого</span><span id="f-total"></span></div>' +
     '<div class="actions"><button type="submit" class="btn primary" id="btnSave">Сохранить</button>' +
@@ -645,15 +692,17 @@ async function submitEntry(form){
   var id = form.dataset.id;
   var old = id ? state.entries.find(function(e){ return e.id === id; }) : null;
   var date = $('#f-date').value, title = $('#f-title').value.trim();
+  if (rcBusy > 0) { toast('Подождите, чеки ещё загружаются'); return; }
   if (!date) { toast('Укажите дату'); return; }
   if (!title) { toast('Напишите, что сделали или купили'); $('#f-title').focus(); return; }
   var data = {date: date, odo: num($('#f-odo').value), cat: $('#f-cat').value, title: title, shop: $('#f-shop').value.trim(),
     labor: num($('#f-labor').value), parts: readParts(), note: $('#f-note').value.trim(), createdAt: old && old.createdAt ? old.createdAt : Date.now()};
+  var rcs = readReceipts(); if (rcs.length) data.receipts = rcs;
   var btn = $('#btnSave'); btn.disabled = true;
   try {
     await saveEntry(id || newId(), data);
-    var keep = photoIds(data);
-    var gone = photoIds(old).concat(formUploads).filter(function(x){ return keep.indexOf(x) < 0; });
+    var keep = allPhotoIds(data);
+    var gone = allPhotoIds(old).concat(formUploads).filter(function(x){ return keep.indexOf(x) < 0; });
     formUploads = [];
     dropPhotos(gone);
     if (id) openDetail(id); else closeSheet();
@@ -661,11 +710,56 @@ async function submitEntry(form){
   }
   catch(e){ btn.disabled = false; toast('Не удалось сохранить. Попробуйте ещё раз.'); }
 }
+
+var RC_MAX = 20, RC_PICK = 10, rcBusy = 0, rcArm = {btn: null, t: null};
+function rcItem(id){
+  return '<div class="rc" data-rc="' + esc(id) + '"><button type="button" class="thumb-lg" data-act="viewphoto" data-kind="receipt" data-photo="' + esc(id) + '" aria-label="Открыть чек"><img src="' + esc(blobUrl(id)) + '" alt="Чек"></button>' +
+    '<button type="button" class="btn small rm" data-act="rcrm">Убрать</button></div>';
+}
+function readReceipts(){ return Array.prototype.map.call(document.querySelectorAll('#rcpts .rc'), function(el){ return el.dataset.rc; }); }
+function rcResetArm(){ clearTimeout(rcArm.t); if (rcArm.btn && rcArm.btn.isConnected) { rcArm.btn.textContent = 'Убрать'; rcArm.btn.classList.remove('armed'); } rcArm.btn = null; }
+function rcRemove(btn){
+  if (rcArm.btn === btn) { var box = btn.closest('.rc'); rcResetArm(); if (box) box.remove(); return; }
+  rcResetArm(); rcArm.btn = btn; btn.textContent = 'Точно убрать?'; btn.classList.add('armed');
+  rcArm.t = setTimeout(rcResetArm, 4000);
+}
+function rcStatus(msg){ var el = $('#rcStatus'); if (!el) return; el.textContent = msg || ''; el.hidden = !msg; }
+async function addReceipts(files){
+  var box = $('#rcpts'); if (!box) return;
+  var room = RC_MAX - readReceipts().length, note = '';
+  if (room <= 0) { toast('К записи можно прикрепить не больше ' + RC_MAX + ' чеков'); return; }
+  if (files.length > RC_PICK) { note = 'Выбрано ' + files.length + ', добавлю первые ' + RC_PICK + '. '; files = files.slice(0, RC_PICK); }
+  if (files.length > room) { note += 'Лимит ' + RC_MAX + ' чеков на запись. '; files = files.slice(0, room); }
+  var ok = 0, failed = 0, lastErr = null;
+  rcBusy++; var save = $('#btnSave'); if (save) save.disabled = true;
+  try {
+    for (var i = 0; i < files.length; i++) {
+      if (!$('#rcpts')) break;
+      rcStatus('Загружаю чеки: ' + (i + 1) + ' из ' + files.length + '…');
+      try {
+        var blob = await shrink(files[i], 1600, 0.82);
+        var r = await assetsApi.upload(blob, {type: 'image/jpeg', prefix: 'rc'});
+        formUploads.push(r.id);
+        if ($('#rcpts')) $('#rcpts').insertAdjacentHTML('beforeend', rcItem(r.id)); else assetsApi.delete(r.id);
+        ok++;
+      } catch(e){ failed++; lastErr = e; if (e && e.code === 'quota_exceeded') break; }
+    }
+  } finally {
+    rcBusy--; rcStatus('');
+    var sv = $('#btnSave'); if (sv && !rcBusy) sv.disabled = false;
+  }
+  if (failed) toast(note + (ok ? 'Добавлено ' + ok + ', не удалось: ' + (files.length - ok) + '. ' : '') + photoError(lastErr));
+  else if (note) toast(note + 'Добавлено: ' + ok);
+  else if (ok > 1) toast('Добавлено чеков: ' + ok);
+}
+
 /* ---------- delete + photo cleanup ---------- */
 var formUploads = [];
 var delArm = {id: null, t: null, btn: null, kind: ''};
 function photoIds(e){ return ((e && e.parts) || []).map(function(p){ return p.photo; }).filter(Boolean); }
-function photoInUse(id){ return state.entries.some(function(e){ return photoIds(e).indexOf(id) >= 0; }); }
+function receiptIds(e){ return Array.isArray(e && e.receipts) ? e.receipts.filter(function(x){ return typeof x === 'string' && x; }) : []; }
+function allPhotoIds(e){ return photoIds(e).concat(receiptIds(e)); }
+function photoInUse(id){ return state.entries.some(function(e){ return allPhotoIds(e).indexOf(id) >= 0; }); }
 async function dropPhotos(ids){
   if (!assetsApi || !ids || !ids.length) return;
   for (var i = 0; i < ids.length; i++) {
@@ -693,7 +787,7 @@ function armDelete(btn, id, kind){
 }
 async function doDelete(id){
   var e = state.entries.find(function(x){ return x.id === id; });
-  var photos = photoIds(e);
+  var photos = allPhotoIds(e);
   try { await removeEntry(id); }
   catch(err){ toast('Не удалось удалить'); return; }
   closeSheet(); toast('Запись удалена'); dropPhotos(photos);
@@ -772,11 +866,20 @@ function shrink(file, maxSide, q){
 function photoError(e){
   var c = e && e.code;
   if (c === 'too_large') return 'Фото слишком большое';
+  if (c === 'quota_exceeded') return 'Не хватило памяти на телефоне. Удалите лишние фото или сохраните резервную копию.';
   if (c === 'quota_or_state') return 'Место для фото закончилось';
   if (c === 'rate_limited') return 'Слишком часто, подождите немного';
   return 'Не удалось загрузить фото';
 }
-var lb = {items: [], i: 0, zoom: false};
+var lb = {items: [], i: 0, zoom: false, gal: false};
+function lbReceiptItems(entryId, photoId){
+  var items = [];
+  if (!entryId) items = readReceipts().map(function(id){ return {id: id, cap: 'Чек'}; });
+  else { var e = state.entries.find(function(x){ return x.id === entryId; }); items = receiptIds(e).map(function(id){ return {id: id, cap: 'Чек'}; }); }
+  var i = items.findIndex(function(x){ return x.id === photoId; });
+  if (i < 0) { items = [{id: photoId, cap: 'Чек'}]; i = 0; }
+  return {items: items, i: i};
+}
 function lbItemsFor(entryId, photoId){
   var e = entryId ? state.entries.find(function(x){ return x.id === entryId; }) : null;
   var items = e ? (e.parts || []).filter(function(p){ return p.photo; }).map(function(p){ return {id: p.photo, cap: p.name}; }) : [];
@@ -791,10 +894,11 @@ function lbShow(){
   $('#lbStage').classList.toggle('zoom', lb.zoom);
   $('#lbStage').scrollTop = 0; $('#lbStage').scrollLeft = 0;
   $('#lightbox').classList.toggle('multi', lb.items.length > 1);
+  $('#lbActions').hidden = !lb.gal; lbResetArm();
 }
 function lbStep(d){ if (lb.items.length < 2) return; lb.i = (lb.i + d + lb.items.length) % lb.items.length; lb.zoom = false; lbShow(); }
-function openLightbox(items, i){ if (!items || !items.length) return; lb.items = items; lb.i = i || 0; lb.zoom = false; lbShow(); $('#lightbox').hidden = false; }
-function closeLightbox(){ $('#lightbox').hidden = true; $('#lightboxImg').removeAttribute('src'); }
+function openLightbox(items, i, gal){ if (!items || !items.length) return; lb.items = items; lb.i = i || 0; lb.zoom = false; lb.gal = !!gal; lbShow(); $('#lightbox').hidden = false; }
+function closeLightbox(){ lbResetArm(); lb.gal = false; $('#lightbox').hidden = true; $('#lightboxImg').removeAttribute('src'); }
 
 function openDetail(id){
   var e = state.entries.find(function(x){ return x.id === id; });
@@ -815,11 +919,69 @@ function openDetail(id){
         '</li>';
     }).join('') + '</ul>';
   }
+  var rcs = receiptIds(e);
+  var rcHtml = rcs.length ? '<h3 class="dh">Чеки</h3><div class="rc-grid">' + rcs.map(function(id){
+    return '<button type="button" class="rc-view" data-act="viewphoto" data-kind="receipt" data-photo="' + esc(id) + '" data-entry="' + esc(e.id) + '" aria-label="Открыть чек"><img src="' + esc(blobUrl(id)) + '" alt="Чек"></button>';
+  }).join('') + '</div>' : '';
   var noteHtml = e.note ? '<h3 class="dh">Заметка</h3><p class="d-note">' + esc(e.note) + '</p>' : '';
   var html = '<div class="d-top" style="--cat:var(' + c.c + ')"><span class="chip">' + esc(c.n) + '</span>' + (e.demo ? '<span class="tag-demo">пример</span>' : '') + '</div>' +
-    '<h3 class="d-title">' + esc(e.title) + '</h3>' + info + cost + partsHtml + noteHtml +
+    '<h3 class="d-title">' + esc(e.title) + '</h3>' + info + cost + partsHtml + rcHtml + noteHtml +
     '<div class="actions" style="margin-top:20px"><button type="button" class="btn primary" data-act="edit" data-id="' + esc(e.id) + '">Редактировать</button><button type="button" class="btn danger" data-act="del" data-id="' + esc(e.id) + '">Удалить</button></div>';
   openSheet('Запись', html);
+}
+
+
+/* ---------- gallery ---------- */
+function galleryList(){ return Array.isArray(state.profile.gallery) ? state.profile.gallery : DEFAULT_GALLERY.slice(); }
+function viewGallery(){
+  var list = galleryList(), cur = state.profile.photo || '';
+  var missing = DEFAULT_GALLERY.filter(function(x){ return list.indexOf(x) < 0; });
+  var h = '<div class="gal-head"><button type="button" class="btn small primary" data-act="galadd">+ Добавить фото</button><span class="cnt">' + list.length + ' ' + plural(list.length, 'фото', 'фото', 'фото') + '</span></div>';
+  if (!list.length) h += '<div class="empty"><h2>Галерея пуста</h2><p>Добавьте фото машины. Любое можно сделать фото шапки.</p></div>';
+  else h += '<div class="gal-grid">' + list.map(function(id, i){
+    return '<button type="button" class="gal-item' + (id === cur ? ' cur' : '') + '" data-gi="' + i + '" aria-label="Открыть фото ' + (i + 1) + '"><img src="' + esc(blobUrl(id)) + '" alt="" loading="lazy" decoding="async"></button>';
+  }).join('') + '</div>';
+  if (missing.length) h += '<p style="text-align:center;margin:16px 0 0"><button type="button" class="btn small" data-act="galdefaults">Вернуть стандартные фото (' + missing.length + ')</button></p>';
+  return h;
+}
+function openGallery(i){
+  openLightbox(galleryList().map(function(id){ return {id: id, cap: ''}; }), i, true);
+}
+function photoReferenced(id){
+  if (!id || id.indexOf('app:') === 0) return true;
+  return state.profile.photo === id || galleryList().indexOf(id) >= 0 || photoInUse(id);
+}
+async function addGalleryFiles(files){
+  var ids = [], failed = 0, err = null;
+  toast('Загружаю фото…');
+  for (var i = 0; i < files.length; i++) {
+    try { var r = await assetsApi.upload(await shrink(files[i], 1600, 0.84), {type: 'image/jpeg'}); ids.push(r.id); }
+    catch(e){ failed++; err = e; }
+  }
+  if (ids.length) { try { await saveProfile({gallery: galleryList().concat(ids)}); } catch(e){ toast('Не удалось сохранить'); return; } }
+  toast(failed ? (ids.length ? 'Добавлено ' + ids.length + ', не удалось: ' + failed : photoError(err)) : 'Добавлено: ' + ids.length);
+}
+async function galleryMakeHero(){
+  var it = lb.items[lb.i]; if (!it) return;
+  var old = state.profile.photo;
+  try { await saveProfile({photo: it.id, photoData: ''}); closeLightbox(); toast('Фото шапки обновлено'); if (old && old !== it.id) dropAsset(old); }
+  catch(e){ toast('Не удалось сохранить'); }
+}
+var lbArm = {t: null};
+function lbResetArm(){ clearTimeout(lbArm.t); var b = $('#lbActions [data-act=lbdel]'); if (b) { b.textContent = 'Удалить'; b.classList.remove('armed'); } }
+async function galleryDelete(){
+  var b = $('#lbActions [data-act=lbdel]');
+  if (!b.classList.contains('armed')) { b.textContent = 'Точно удалить?'; b.classList.add('armed'); lbArm.t = setTimeout(lbResetArm, 4000); return; }
+  lbResetArm();
+  var it = lb.items[lb.i]; if (!it) return;
+  try { await saveProfile({gallery: galleryList().filter(function(x){ return x !== it.id; })}); }
+  catch(e){ toast('Не удалось удалить'); return; }
+  dropAsset(it.id);
+  lb.items.splice(lb.i, 1);
+  toast('Фото удалено');
+  if (!lb.items.length) { closeLightbox(); return; }
+  if (lb.i >= lb.items.length) lb.i = 0;
+  lb.zoom = false; lbShow();
 }
 
 /* ---------- car photo ---------- */
@@ -835,7 +997,7 @@ async function smallDataUrl(file){
   }
   var e = new Error('too big'); e.code = 'too_large'; throw e;
 }
-async function dropAsset(id){ if (!assetsApi || !id) return; try { await assetsApi.delete(id); } catch(e){} }
+async function dropAsset(id){ if (!assetsApi || !id || photoReferenced(id)) return; try { await assetsApi.delete(id); } catch(e){} }
 async function setCarPhoto(f){
   toast('Загружаю фото…');
   var oldId = state.profile.photo;
@@ -991,61 +1153,16 @@ function monthCard(){
   return h;
 }
 
-/* ---------- car gallery ---------- */
-function viewGallery(){
-  var items = state.gallery.slice().sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
-  var h = '<div class="gallery-head"><div><h2 style="margin:0">Галерея машины</h2><p class="hint" style="margin:4px 0 0">Фото кузова, салона, деталей и ремонтов</p></div><button class="btn primary" data-act="addgallery">+ Фото</button></div>';
-  if (!items.length) return h + '<div class="gallery-empty"><h3 style="margin:0 0 6px;color:var(--ink)">Пока нет фотографий</h3><p style="margin:0 0 14px">Добавь фото своего Golf IV Harlekin — они останутся в приложении.</p><button class="btn primary" data-act="addgallery">Добавить фотографии</button></div>';
-  h += '<div class="gallery-grid">' + items.map(function(it){
-    var src = blobUrl(it.photo);
-    return '<article class="gallery-card"><button type="button" style="display:block;width:100%;padding:0;border:0;background:transparent" data-act="galleryview" data-photo="'+esc(it.photo)+'" aria-label="Открыть '+esc(it.title||'фото')+'"><img src="'+src+'" alt="'+esc(it.title||'Фото автомобиля')+'" loading="lazy"></button><div class="gallery-meta"><div class="gallery-title">'+esc(it.title||'Фото автомобиля')+'</div><div class="gallery-sub">'+esc(it.category||'Общее')+' · '+esc(fmtDate(it.date||today()))+'</div>'+(it.note?'<div class="gallery-sub">'+esc(it.note)+'</div>':'')+'<div class="gallery-actions"><button class="btn" data-act="editgallery" data-id="'+esc(it.id)+'">Изменить</button><button class="btn danger" data-act="delgallery" data-id="'+esc(it.id)+'">Удалить</button></div></div></article>';
-  }).join('') + '</div>';
-  return h;
-}
-function openGalleryForm(id){
-  var it = id ? state.gallery.find(function(x){return x.id===id;}) : null;
-  var html = '<form id="galleryForm" data-id="'+esc(it?it.id:'')+'">'+
-    '<label class="gallery-label" for="galleryTitle">Название</label><input class="gallery-input" id="galleryTitle" name="title" maxlength="100" placeholder="Например, передний бампер" value="'+esc(it?it.title:'')+'">'+
-    '<label class="gallery-label" for="galleryCategory">Альбом</label><select class="gallery-input" id="galleryCategory" name="category"><option '+(!it||it.category==='Общее'?'selected':'')+'>Общее</option><option '+(it&&it.category==='Кузов'?'selected':'')+'>Кузов</option><option '+(it&&it.category==='Салон'?'selected':'')+'>Салон</option><option '+(it&&it.category==='Двигатель'?'selected':'')+'>Двигатель</option><option '+(it&&it.category==='Ходовая'?'selected':'')+'>Ходовая</option><option '+(it&&it.category==='Ремонт'?'selected':'')+'>Ремонт</option><option '+(it&&it.category==='Запчасти'?'selected':'')+'>Запчасти</option></select>'+
-    '<label class="gallery-label" for="galleryDate">Дата</label><input class="gallery-input" id="galleryDate" name="date" type="date" value="'+esc(it?it.date:today())+'">'+
-    '<label class="gallery-label" for="galleryNote">Заметка (необязательно)</label><textarea class="gallery-input" id="galleryNote" name="note" rows="3" maxlength="500" placeholder="Что изображено, состояние детали…">'+esc(it?it.note:'')+'</textarea>'+
-    '<label class="gallery-label">Фотография</label><p class="note">'+(it?'Текущее фото сохранится, если не выбрать новое. ':'')+'Можно выбрать несколько фото сразу.</p><div class="actions"><button type="button" class="btn" data-act="gallerychoose">'+(it?'Заменить фото':'Выбрать фото')+'</button><button type="submit" class="btn primary">Сохранить</button></div><div id="galleryPicked" class="note" style="margin-top:8px"></div></form>';
-  openSheet(it?'Изменить фото':'Добавить в галерею',html);
-  window.galleryEditingId = id || null; window.galleryPendingFiles = [];
-}
-async function saveGalleryForm(form){
-  var id=form.dataset.id || newId(), old=state.gallery.find(function(x){return x.id===id;}), files=window.galleryPendingFiles||[];
-  if (!old && !files.length){ toast('Сначала выбери фотографию'); return; }
-  var title=form.elements.title.value.trim(), category=form.elements.category.value, date=form.elements.date.value||today(), note=form.elements.note.value.trim();
-  try{
-    if(files.length){
-      var added=[];
-      for(var i=0;i<files.length;i++){
-        var blob=await shrink(files[i],1600,0.82), up=await assetsApi.upload(blob);
-        added.push({id: old && i===0 ? id : newId(), photo:up.id, title:title || (files.length>1?'Фото '+(i+1):'Фото автомобиля'), category:category, date:date, note:note, createdAt:Date.now()+i});
-      }
-      if(old){ state.gallery=state.gallery.filter(function(x){return x.id!==id;}); if(added.length) added[0].id=id; if(old.photo && (!added.length || old.photo!==added[0].photo)) dropAsset(old.photo); }
-      state.gallery=state.gallery.concat(added);
-    } else if(old){ old.title=title||'Фото автомобиля'; old.category=category; old.date=date; old.note=note; }
-    cacheSave(); closeSheet(); window.galleryPendingFiles=[]; state.tab='gallery'; render(); toast('Галерея сохранена');
-  }catch(e){ toast(photoError(e)); }
-}
-async function deleteGalleryItem(id){
-  var it=state.gallery.find(function(x){return x.id===id;}); if(!it)return;
-  if(!confirm('Удалить это фото из галереи?'))return;
-  state.gallery=state.gallery.filter(function(x){return x.id!==id;}); cacheSave(); await dropAsset(it.photo); render(); toast('Фото удалено');
-}
-
 /* ---------- backup ---------- */
 async function exportBackup(){
   if (!downloadsApi) return;
   var ids = {};
-  state.entries.forEach(function(e){ photoIds(e).forEach(function(x){ ids[x] = 1; }); });
-  state.gallery.forEach(function(g){ if(g.photo) ids[g.photo]=1; });
+  state.entries.forEach(function(e){ allPhotoIds(e).forEach(function(x){ ids[x] = 1; }); });
   if (state.profile.photo) ids[state.profile.photo] = 1;
+  galleryList().forEach(function(x){ ids[x] = 1; });
   var photos = {};
   for (var k in ids) { if (blobCache[k]) { try { photos[k] = await blobToDataUrl(blobCache[k].blob); } catch(e){} } }
-  var data = {app: 'servisnaya-knizhka', v: 2, exportedAt: new Date().toISOString(), profile: state.profile, entries: state.entries, reminders: state.reminders, gallery: state.gallery, photos: photos};
+  var data = {app: 'servisnaya-knizhka', v: 2, exportedAt: new Date().toISOString(), profile: state.profile, entries: state.entries, reminders: state.reminders, photos: photos};
   try { await downloadsApi.save({filename: 'servisnaya-knizhka-kopiya.json', data: JSON.stringify(data, null, 1)}); }
   catch(e){ if (!e || e.code !== 'declined') toast('Не удалось сохранить файл'); }
 }
@@ -1059,7 +1176,6 @@ function readRestoreFile(f){
     if (!o || o.app !== 'servisnaya-knizhka' || !Array.isArray(o.entries)) { toast('Это не файл резервной копии книжки'); return; }
     o.entries = o.entries.filter(validEntry);
     o.reminders = Array.isArray(o.reminders) ? o.reminders.filter(validRem) : [];
-    o.gallery = Array.isArray(o.gallery) ? o.gallery.filter(function(g){return g && typeof g.photo==='string';}) : [];
     o.photos = (o.photos && typeof o.photos === 'object') ? o.photos : {};
     pendingRestore = o;
     var n = o.entries.length, m = o.reminders.length;
@@ -1077,10 +1193,17 @@ async function doRestore(){
       var du = o.photos[pid];
       if (typeof du === 'string' && /^data:image\//.test(du) && !blobCache[pid]) { await putPhoto(pid, await (await fetch(du)).blob()); }
     }
-    for (var i = 0; i < o.entries.length; i++) { var e = Object.assign({}, o.entries[i]); var id = e.id || newId(); delete e.id; await saveEntry(id, e); }
+    for (var i = 0; i < o.entries.length; i++) {
+      var e = Object.assign({}, o.entries[i]); var id = e.id || newId(); delete e.id;
+      if ('receipts' in e) { e.receipts = receiptIds(e).filter(function(x){ return !!blobCache[x]; }); if (!e.receipts.length) delete e.receipts; }
+      await saveEntry(id, e);
+    }
     for (var j = 0; j < o.reminders.length; j++) { var r = Object.assign({}, o.reminders[j]); var rid = r.id || newId(); delete r.id; await saveReminder(rid, r); }
-    if (o.gallery && o.gallery.length) { state.gallery=state.gallery.concat(o.gallery); cacheSave(); }
-    if (o.profile && typeof o.profile === 'object') await saveProfile(o.profile);
+    if (o.profile && typeof o.profile === 'object') {
+      var pr = Object.assign({}, o.profile);
+      if (Array.isArray(pr.gallery)) { var cur = galleryList(); pr.gallery = cur.concat(pr.gallery.filter(function(x){ return cur.indexOf(x) < 0; })); }
+      await saveProfile(pr);
+    }
     closeSheet(); toast('Восстановлено');
   } catch(e){ toast('Не удалось восстановить всё. Попробуйте ещё раз.'); }
 }
@@ -1097,21 +1220,19 @@ document.addEventListener('click', function(ev){
     var la = ev.target.closest('[data-act]'), lact = la ? la.dataset.act : '';
     if (lact === 'lbprev') lbStep(-1);
     else if (lact === 'lbnext') lbStep(1);
+    else if (lact === 'lbhero') galleryMakeHero();
+    else if (lact === 'lbdel') galleryDelete();
+    else if (ev.target.closest('#lbActions')) return;
     else if (ev.target.id === 'lightboxImg') { lb.zoom = !lb.zoom; lbShow(); }
     else closeLightbox();
     return;
   }
   var tab = ev.target.closest('[data-tab]');
-  if (tab) { state.tab = tab.dataset.tab; render(); return; }
+  if (tab) { state.tab = tab.dataset.tab; render(); if (tab.scrollIntoView) tab.scrollIntoView({inline: 'center', block: 'nearest'}); return; }
   var act = ev.target.closest('[data-act]');
   if (act) {
     var a = act.dataset.act;
     if (a === 'new') openEntry(null);
-    else if (a === 'addgallery') openGalleryForm(null);
-    else if (a === 'gallerychoose') { var gi = $('#galleryInput'); gi.value = ''; gi.click(); }
-    else if (a === 'editgallery') openGalleryForm(act.dataset.id);
-    else if (a === 'delgallery') deleteGalleryItem(act.dataset.id);
-    else if (a === 'galleryview') { var gp = act.dataset.photo; openLightbox([{id: gp, cap: (state.gallery.find(function(x){return x.photo===gp;})||{}).title || 'Фото автомобиля'}], 0); }
     else if (a === 'close') closeSheet();
     else if (a === 'settings') openSettings();
     else if (a === 'demo') seedDemo();
@@ -1120,7 +1241,9 @@ document.addEventListener('click', function(ev){
     else if (a === 'rmpart') { act.closest('.part-wrap').remove(); updateTotal(); }
     else if (a === 'pickphoto') { photoTarget = act.closest('.part-wrap'); var pi = $('#photoInput'); pi.value = ''; pi.click(); }
     else if (a === 'rmphoto') { var w = act.closest('.part-wrap'); w.dataset.photo = ''; w.querySelector('.pp').innerHTML = photoCtl(''); }
-    else if (a === 'viewphoto') { var g = lbItemsFor(act.dataset.entry, act.dataset.photo); openLightbox(g.items, g.i); }
+    else if (a === 'viewphoto') { var g = act.dataset.kind === 'receipt' ? lbReceiptItems(act.dataset.entry, act.dataset.photo) : lbItemsFor(act.dataset.entry, act.dataset.photo); openLightbox(g.items, g.i); }
+    else if (a === 'addreceipt') { var ri2 = $('#receiptInput'); ri2.value = ''; ri2.click(); }
+    else if (a === 'rcrm') rcRemove(act);
     else if (a === 'edit') openEntry(act.dataset.id);
     else if (a === 'canceledit') { abandonUploads(); openDetail(act.dataset.id); }
     else if (a === 'del') armDelete(act, act.dataset.id, act.dataset.kind);
@@ -1136,10 +1259,14 @@ document.addEventListener('click', function(ev){
     else if (a === 'remdone') markDone(act.dataset.id, false);
     else if (a === 'remundo') markDone(act.dataset.id, true);
     else if (a === 'gotorem') { state.tab = 'rem'; render(); }
+    else if (a === 'galadd') { var gi0 = $('#galleryInput'); gi0.value = ''; gi0.click(); }
+    else if (a === 'galdefaults') { saveProfile({gallery: galleryList().concat(DEFAULT_GALLERY.filter(function(x){ return galleryList().indexOf(x) < 0; }))}); toast('Стандартные фото возвращены'); }
     else if (a === 'mprev') { state.expMonth = stepMonth(effMonth(), -1); render(); }
     else if (a === 'mnext') { state.expMonth = stepMonth(effMonth(), 1); render(); }
     return;
   }
+  var gi = ev.target.closest('[data-gi]');
+  if (gi && gi.closest('#view')) { openGallery(+gi.dataset.gi); return; }
   var mo = ev.target.closest('[data-month]');
   if (mo) { state.expMonth = mo.dataset.month; render(); var mc = $('#monthCard'); if (mc && mc.scrollIntoView) mc.scrollIntoView({block: 'start'}); return; }
   var rr = ev.target.closest('[data-rid]');
@@ -1152,7 +1279,6 @@ document.addEventListener('submit', function(ev){
   ev.preventDefault();
   if (ev.target.id === 'entryForm') submitEntry(ev.target);
   else if (ev.target.id === 'setForm') submitSettings();
-  else if (ev.target.id === 'galleryForm') saveGalleryForm(ev.target);
   else if (ev.target.id === 'remForm') submitReminder(ev.target);
 });
 document.addEventListener('input', function(ev){
@@ -1171,15 +1297,9 @@ $('#lbStage').addEventListener('touchend', function(ev){
   var dx = ev.changedTouches[0].clientX - swipeX; swipeX = null;
   if (Math.abs(dx) > 50) lbStep(dx < 0 ? 1 : -1);
 }, {passive: true});
-$('#galleryInput').addEventListener('change', function(ev){
-  var files=Array.prototype.slice.call(ev.target.files||[]).filter(function(f){return /^image\//i.test(f.type);});
-  if(!files.length)return;
-  var editing=window.galleryEditingId || null;
-  if(!document.querySelector('#galleryForm')) openGalleryForm(editing);
-  window.galleryPendingFiles=files;
-  var picked=$('#galleryPicked'); if(picked) picked.textContent=files.length+' фото выбрано';
-});
 $('#restoreInput').addEventListener('change', function(ev){ var f = ev.target.files && ev.target.files[0]; if (f) readRestoreFile(f); });
+$('#receiptInput').addEventListener('change', function(ev){ var fs = Array.prototype.slice.call(ev.target.files || []); if (fs.length) addReceipts(fs); });
+$('#galleryInput').addEventListener('change', function(ev){ var fs = Array.prototype.slice.call(ev.target.files || []); if (fs.length) addGalleryFiles(fs); });
 $('#photoInput').addEventListener('change', async function(ev){
   var f = ev.target.files && ev.target.files[0];
   var wrap = photoTarget; photoTarget = null;
@@ -1202,11 +1322,17 @@ $('#photoInput').addEventListener('change', async function(ev){
 /* ---------- start ---------- */
 state.entries = lsGet('sk_entries', []);
 state.reminders = lsGet('sk_reminders', []);
-state.gallery = lsGet('sk_gallery', []);
 state.profile = Object.assign({}, DEF_PROFILE, lsGet('sk_profile', {}));
 render();
 connect();
-if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+if ('serviceWorker' in navigator) {
+  var hadSW = !!navigator.serviceWorker.controller, swReloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    if (!hadSW || swReloaded || !$('#sheet').hidden) return;
+    swReloaded = true; location.reload();
+  });
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
 })();
 </script>
 
