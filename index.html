@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDF3F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1416" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Книжка">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Сервисная книжка</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&family=Oswald:wght@500;600&display=swap">
+<style>
+/* Layout: одна узкая колонка, как карманная книжка. Шапка с одометром, строка итогов, три вкладки, форма выезжает снизу.
+   Палитра взята с самой машины: бирюзовая, жёлтая, красная и синяя панели арлекино. */
+:root{
+  --bg:#EDF3F3; --surface:#FFFFFF; --surface2:#E4ECEC; --ink:#0F2328; --muted:#566E74; --line:#D1DDDE;
+  --accent:#0A8F8A; --on-accent:#FFFFFF; --danger:#C62828; --odo-bg:#0F2328; --odo-fg:#F2D777;
+  --c-teal:#0E9C97; --c-yellow:#E8A200; --c-red:#D62D2F; --c-navy:#3D3B94; --c-green:#4E9A4B; --c-pink:#B33F8E; --c-grey:#6B7C80;
+  --font-display:'Oswald','Arial Narrow',Impact,sans-serif;
+  --font-body:'Golos Text',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --card-shadow:0 8px 24px rgba(10,35,40,.16);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B1416; --surface:#122024; --surface2:#1A2B30; --ink:#E6F0F0; --muted:#8FA6AB; --line:#25393F;
+    --accent:#2FC9C2; --on-accent:#04201F; --danger:#FF7A72; --odo-bg:#050A0B; --odo-fg:#F5E3A0;
+    --c-teal:#2FC9C2; --c-yellow:#F5B93A; --c-red:#FF6B66; --c-navy:#8B88F0; --c-green:#7BC678; --c-pink:#E26FBE; --c-grey:#97A9AD;
+    --card-shadow:0 8px 24px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B1416; --surface:#122024; --surface2:#1A2B30; --ink:#E6F0F0; --muted:#8FA6AB; --line:#25393F;
+  --accent:#2FC9C2; --on-accent:#04201F; --danger:#FF7A72; --odo-bg:#050A0B; --odo-fg:#F5E3A0;
+  --c-teal:#2FC9C2; --c-yellow:#F5B93A; --c-red:#FF6B66; --c-navy:#8B88F0; --c-green:#7BC678; --c-pink:#E26FBE; --c-grey:#97A9AD;
+  --card-shadow:0 8px 24px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%}
+body.lock{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 120px}
+
+/* masthead */
+.masthead{background:var(--surface);border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow)}
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.hero{position:relative;color:#fff;background:linear-gradient(135deg,#0c3b3f 0%,#1c2a62 100%)}
+.hero-img{display:block;width:100%;aspect-ratio:16/11;object-fit:cover;object-position:55% 50%}
+.hero-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(5,12,14,.62) 0%,rgba(5,12,14,0) 30%,rgba(5,12,14,0) 48%,rgba(5,12,14,.9) 100%)}
+.hero-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 14px 0 18px}
+.hero-eyebrow{padding-top:4px;font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.92);text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.hero-btn{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.32);background:rgba(8,18,20,.5);color:#fff;display:grid;place-items:center;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.hero-bottom{position:absolute;left:0;right:0;bottom:0;padding:0 18px 16px}
+.hero h1{margin:0;font-family:var(--font-display);font-weight:600;font-size:36px;line-height:1.05;letter-spacing:.01em;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.55);text-wrap:balance;overflow-wrap:anywhere}
+.hero-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.hero-tags:empty{display:none}
+.tagpill{display:inline-block;max-width:100%;padding:3px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.36);background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-size:12px;font-weight:500;letter-spacing:.04em;color:#fff;overflow-wrap:anywhere}
+.dash{padding:14px 18px 18px}
+.odo{display:flex;align-items:center;gap:3px}
+.odo .d{font-family:var(--font-mono);font-weight:600;font-size:22px;background:var(--odo-bg);color:var(--odo-fg);width:24px;height:34px;display:grid;place-items:center;border-radius:4px}
+.odo .unit{margin-left:8px;font-size:13px;color:var(--muted);letter-spacing:.06em}
+.ledger{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.ledger .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ledger .v{font-weight:600;font-size:16px;font-variant-numeric:tabular-nums;margin-top:2px;overflow-wrap:anywhere}
+
+/* tabs + search */
+.tabs{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:12px;margin:16px 0 12px}
+.tab{flex:1;border:0;background:transparent;padding:9px 6px;border-radius:9px;font-weight:500;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.search{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:14px}
+.gallery-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}.gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.gallery-card{position:relative;overflow:hidden;border:1px solid var(--line);background:var(--surface);border-radius:13px}.gallery-card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--surface2)}.gallery-meta{padding:9px 10px}.gallery-title{font-weight:600;overflow-wrap:anywhere}.gallery-sub{font-size:12px;color:var(--muted);margin-top:3px}.gallery-actions{display:flex;gap:6px;margin-top:8px}.gallery-actions .btn{flex:1;padding:6px 8px;font-size:12px}.gallery-empty{padding:22px 16px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted)}.gallery-label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}.gallery-input{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+
+/* log */
+.month{margin-top:18px}
+.month-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 8px;font-family:var(--font-display);font-weight:500;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.month-h span:last-child{font-family:var(--font-body);font-size:14px;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums}
+ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.entry{width:100%;text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--cat,var(--c-grey));border-radius:12px;padding:11px 14px}
+.e-date{display:block;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.e-title{display:block;font-weight:600;margin-top:2px;overflow-wrap:anywhere}
+.e-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:6px;font-size:13px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);color:var(--ink);border-radius:999px;padding:2px 10px 2px 8px;font-size:12px}
+.chip::before{content:"";width:7px;height:7px;background:var(--cat,var(--c-grey));transform:rotate(45deg);flex:none}
+.tag-demo{font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px dashed var(--muted);border-radius:4px;padding:0 5px}
+.e-sum{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* parts */
+.part-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 14px;width:100%;text-align:left}
+.part-row .pn{font-weight:600;overflow-wrap:anywhere}
+.part-row .pm{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* stats */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.card h2{margin:0 0 12px;font-family:var(--font-display);font-weight:500;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.bar-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;margin-bottom:12px}
+.bar-row:last-child{margin-bottom:0}
+.bar-row .lbl{font-size:14px;overflow-wrap:anywhere}
+.bar-row .val{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{grid-column:1/-1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--cat,var(--accent));border-radius:4px;min-width:2px}
+.split{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface2)}
+.split i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:14px}
+.legend b{font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:9px;height:9px;transform:rotate(45deg);margin-right:7px}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0}
+
+/* misc */
+.hint{color:var(--muted);text-align:center;padding:24px 8px;margin:0}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:24px 18px;text-align:center}
+.empty h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 8px}
+.empty p{margin:0 auto 16px;max-width:36ch;color:var(--muted)}
+.empty-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.demo-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:14px}
+.foot{font-size:12px;color:var(--muted);text-align:center;margin:28px 0 0}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 16px;font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.danger{color:var(--danger);border-color:var(--danger);background:transparent}
+.btn.danger.armed{background:var(--danger);color:var(--bg)}
+.btn.small{padding:6px 12px;font-size:14px}
+.btn:disabled{opacity:.55}
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:10;background:var(--accent);color:var(--on-accent);border:0;border-radius:999px;padding:14px 22px;font-weight:600;font-size:16px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+
+/* sheet */
+.backdrop{position:fixed;inset:0;background:rgba(5,15,18,.55);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:calc(100% - 20px);z-index:21;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;display:flex;flex-direction:column}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.sheet-head h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:20px}
+.sheet-body{overflow-y:auto;padding:14px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));-webkit-overflow-scrolling:touch}
+.field{display:block;margin-bottom:12px}
+.field>span{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.field input,.field select,.field textarea,.p-name,.p-qty,.p-price{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:16px}
+.field textarea{min-height:70px;resize:vertical}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.parts-h{display:flex;justify-content:space-between;align-items:center;margin:4px 0 8px}
+.parts-h span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sheet[hidden],.backdrop[hidden],.toast[hidden]{display:none}
+.part{display:grid;grid-template-columns:minmax(0,1fr) 54px 84px 34px;gap:6px;margin-bottom:8px}
+.part .p-name,.part .p-qty,.part .p-price{padding-left:9px;padding-right:9px}
+.part-wrap{margin-bottom:12px}
+.part-wrap .part{margin-bottom:6px}
+.pp{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:34px}
+.thumb{width:44px;height:44px;padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface2);flex:none}
+.thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.mini{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:var(--surface2);flex:none;display:block}
+.pm-row{display:flex;gap:12px;align-items:center;min-width:0}
+.lightbox{position:fixed;inset:0;z-index:40;background:rgba(5,10,12,.94);display:flex;flex-direction:column;padding-top:max(12px,env(safe-area-inset-top,0px));padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
+.lightbox[hidden]{display:none}
+.lb-top{display:flex;justify-content:flex-end;padding:0 max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px))}
+.lb-stage{flex:1;min-height:0;display:flex;overflow:auto;padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px));-webkit-overflow-scrolling:touch}
+.lb-stage img{margin:auto;max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;cursor:zoom-in}
+.lb-stage.zoom img{max-width:none;max-height:none;width:220%;cursor:zoom-out}
+.lb-cap{color:#E6F0F0;text-align:center;font-size:14px;padding:10px 16px 0;min-height:32px;overflow-wrap:anywhere}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;border:0;background:rgba(0,0,0,.4);color:#fff;font-size:30px;line-height:1;border-radius:10px}
+.lb-nav.prev{left:max(6px,env(safe-area-inset-left,0px))}
+.lb-nav.next{right:max(6px,env(safe-area-inset-right,0px))}
+.lightbox:not(.multi) .lb-nav{display:none}
+.d-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.d-title{font-family:var(--font-display);font-weight:600;font-size:26px;line-height:1.15;margin:10px 0 14px;overflow-wrap:anywhere;text-wrap:balance}
+.kvs{margin:0 0 14px;padding:4px 14px;background:var(--surface2);border-radius:12px}
+.kv{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kv.sum{font-weight:600}
+.kv.sum dt{color:var(--ink)}
+.dh{margin:18px 0 8px;font-family:var(--font-display);font-weight:500;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dpart{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.dp-row{display:flex;justify-content:space-between;gap:12px}
+.dp-name{font-weight:600;overflow-wrap:anywhere}
+.dphoto{display:block;width:100%;margin-top:10px;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface2)}
+.dphoto img{display:block;width:100%;max-height:320px;object-fit:contain}
+.d-note{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.part .x{border:1px solid var(--line);background:var(--bg);border-radius:10px;color:var(--muted)}
+.cols-h{display:grid;grid-template-columns:minmax(0,1fr) 54px 84px 34px;gap:6px;font-size:11px;color:var(--muted);margin-bottom:4px}
+.total{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0;padding:12px 14px;background:var(--surface2);border-radius:10px;font-weight:600;font-variant-numeric:tabular-nums}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions .btn{flex:1 1 auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);text-align:center}
+.hero-btns{display:flex;gap:8px}
+.tab{font-size:14px;padding-left:2px;padding-right:2px}
+.nextrem{display:block;width:100%;text-align:left;margin-top:12px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);font-size:14px;overflow-wrap:anywhere}
+.nextrem.late{border-color:var(--danger)}
+.nextrem b{font-weight:600}
+.mnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.mnav .btn{min-width:44px}
+.mtotal{font-family:var(--font-display);font-weight:600;font-size:30px;font-variant-numeric:tabular-nums;margin-bottom:2px}
+button.bar-row{width:100%;text-align:left;border:0;background:transparent;padding:0;color:inherit;font:inherit}
+.bar-row.sel .lbl{color:var(--accent);font-weight:600}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+[hidden]{display:none!important}
+body{margin:0;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+.wrap{padding-top:max(14px,env(safe-area-inset-top,0px))}
+</style>
+</head>
+<body>
+
+
+<main class="wrap">
+  <header class="masthead">
+    <div class="hero">
+      <img class="hero-img" src="car-hero.jpg" alt="" decoding="async">
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-top">
+        <span class="hero-eyebrow">Сервисная книжка</span>
+        <span class="hero-btns">
+          <button class="hero-btn" data-act="carphoto" aria-label="Сменить фото машины">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h3l1.4-2h7.2l1.4 2h3V18H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+          </button>
+          <button class="hero-btn" data-act="settings" aria-label="Настройки">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 5h8M15 5h2M3 10h2M9 10h8M3 15h10M17 15h0"/><circle cx="13" cy="5" r="2"/><circle cx="7" cy="10" r="2"/><circle cx="15" cy="15" r="2"/></svg>
+          </button>
+        </span>
+      </div>
+      <div class="hero-bottom">
+        <h1 id="carName">Golf IV</h1>
+        <div class="hero-tags" id="carTag"></div>
+      </div>
+    </div>
+    <div class="dash">
+      <div class="odo" id="odo" aria-label="Пробег"></div>
+      <button type="button" class="nextrem" id="nextRem" data-act="gotorem" hidden></button>
+      <div class="ledger" id="ledger"></div>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Разделы">
+    <button class="tab" role="tab" data-tab="log" aria-selected="true">Журнал</button>
+    <button class="tab" role="tab" data-tab="parts" aria-selected="false">Запчасти</button>
+    <button class="tab" role="tab" data-tab="gallery" aria-selected="false">Галерея</button>
+    <button class="tab" role="tab" data-tab="stats" aria-selected="false">Итоги</button>
+    <button class="tab" role="tab" data-tab="rem" aria-selected="false">Напоминания</button>
+  </div>
+  <input class="search" id="search" type="search" placeholder="Поиск по записям и запчастям" aria-label="Поиск" autocomplete="off">
+  <div id="view"></div>
+  <p class="foot" id="foot"></p>
+</main>
+
+<button class="fab" data-act="new">+ Запись</button>
+<div class="backdrop" id="backdrop" hidden></div>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="sheet-head"><h2 id="sheetTitle"></h2><button class="btn small" data-act="close">Закрыть</button></div>
+  <div class="sheet-body" id="sheetBody"></div>
+</section>
+<div class="toast" id="toast" role="status" hidden></div>
+<input type="file" id="photoInput" accept="image/*" hidden>
+<input type="file" id="galleryInput" accept="image/*" multiple hidden>
+<input type="file" id="restoreInput" accept=".json,application/json" hidden>
+<div class="lightbox" id="lightbox" hidden>
+  <div class="lb-top"><button type="button" class="btn small" data-act="closephoto">Закрыть</button></div>
+  <div class="lb-stage" id="lbStage"><img id="lightboxImg" alt="Фото запчасти"></div>
+  <div class="lb-cap" id="lbCap"></div>
+  <button type="button" class="lb-nav prev" data-act="lbprev" aria-label="Предыдущее фото">‹</button>
+  <button type="button" class="lb-nav next" data-act="lbnext" aria-label="Следующее фото">›</button>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var CATS = {
+  maint:  {n:'ТО и жидкости', c:'--c-teal'},
+  repair: {n:'Ремонт',        c:'--c-red'},
+  parts:  {n:'Запчасти',      c:'--c-yellow'},
+  tires:  {n:'Шины и диски',  c:'--c-navy'},
+  care:   {n:'Уход и мойка',  c:'--c-green'},
+  tuning: {n:'Тюнинг',        c:'--c-pink'},
+  other:  {n:'Прочее',        c:'--c-grey'}
+};
+var CURRENCIES = ['BYN','RUB','USD','EUR','PLN','UAH','KZT'];
+var TITLE_HINTS = ['Замена масла и фильтров','Замена тормозных колодок','Диагностика','Шиномонтаж и балансировка','Замена ремня ГРМ','Мойка и химчистка','Страховка','Налог и техосмотр'];
+
+var DEF_PROFILE = {car:'Golf IV', cur:'BYN', odo:0, tag:'Арлекино', photo:'', photoData:''};
+var state = {
+  entries: [], reminders: [], gallery: [],
+  profile: Object.assign({}, DEF_PROFILE),
+  tab: 'log', q: '', mode: 'local', loaded: false, expMonth: ''
+};
+var cloud = {col:null, rem:null, prof:null};
+var pendingRestore = null;
+var downloadsApi = null;
+var assetsApi = null;
+var photoTarget = null;
+
+/* ---------- local photo store (IndexedDB) + file saving ---------- */
+var blobCache = {};
+function blobUrl(id){ return id && blobCache[id] ? blobCache[id].url : ''; }
+var idbP = null;
+function idb(){
+  if (!idbP) idbP = new Promise(function(res, rej){
+    try {
+      var rq = indexedDB.open('servisnaya-knizhka', 1);
+      rq.onupgradeneeded = function(){ rq.result.createObjectStore('photos'); };
+      rq.onsuccess = function(){ res(rq.result); };
+      rq.onerror = function(){ rej(rq.error); };
+    } catch(e){ rej(e); }
+  });
+  return idbP;
+}
+function idbDo(mode, fn){
+  return idb().then(function(db){ return new Promise(function(res, rej){
+    var tx = db.transaction('photos', mode), st = tx.objectStore('photos'), r = fn(st);
+    tx.oncomplete = function(){ res(r && r.result); };
+    tx.onerror = tx.onabort = function(){ var e = new Error('idb'); e.code = 'quota_or_state'; rej(e); };
+  }); });
+}
+function putPhoto(id, blob){
+  return idbDo('readwrite', function(st){ return st.put(blob, id); }).then(function(){
+    if (blobCache[id]) URL.revokeObjectURL(blobCache[id].url);
+    blobCache[id] = {blob: blob, url: URL.createObjectURL(blob)};
+  });
+}
+async function loadPhotos(){
+  var db = await idb();
+  await new Promise(function(res){
+    var tx = db.transaction('photos', 'readonly'), st = tx.objectStore('photos'), rq = st.openCursor();
+    rq.onsuccess = function(){
+      var c = rq.result; if (!c) return;
+      blobCache[c.key] = {blob: c.value, url: URL.createObjectURL(c.value)}; c.continue();
+    };
+    tx.oncomplete = res; tx.onerror = tx.onabort = res;
+  });
+}
+assetsApi = {
+  upload: async function(blob){ var id = 'p' + newId(); await putPhoto(id, blob); return {id: id}; },
+  delete: async function(id){
+    await idbDo('readwrite', function(st){ return st.delete(id); });
+    if (blobCache[id]) { URL.revokeObjectURL(blobCache[id].url); delete blobCache[id]; }
+  }
+};
+downloadsApi = {
+  save: async function(o){
+    var type = /\.json$/i.test(o.filename) ? 'application/json' : 'text/csv';
+    var file = new File([o.data], o.filename, {type: type});
+    try {
+      if (navigator.canShare && navigator.canShare({files: [file]})) { await navigator.share({files: [file]}); return {status: 'saved'}; }
+    } catch(e){
+      if (e && e.name === 'AbortError') { var d = new Error('declined'); d.code = 'declined'; throw d; }
+    }
+    var u = URL.createObjectURL(file), a = document.createElement('a');
+    a.href = u; a.download = o.filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(u); }, 30000);
+    return {status: 'saved'};
+  }
+};
+
+function $(s){ return document.querySelector(s); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function num(v){ var n = parseFloat(String(v == null ? '' : v).replace(/\s/g,'').replace(',','.')); return isFinite(n) ? n : 0; }
+function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function isoDate(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function today(){ return isoDate(new Date()); }
+function parseDate(s){ var p = String(s || '').split('-').map(Number); return new Date(p[0] || 1970, (p[1] || 1) - 1, p[2] || 1); }
+function fmtDate(s){ return parseDate(s).toLocaleDateString('ru-RU', {day:'numeric', month:'short', year:'numeric'}).replace(' г.',''); }
+function monthTitle(key){ var d = parseDate(key + '-01'); var t = d.toLocaleDateString('ru-RU', {month:'long', year:'numeric'}).replace(' г.',''); return t.charAt(0).toUpperCase() + t.slice(1); }
+function fmtKm(n){ return Math.round(n).toLocaleString('ru-RU'); }
+function money(n, whole){
+  var cur = state.profile.cur || 'BYN';
+  var frac = whole ? 0 : (Math.abs(n % 1) > 0.004 ? 2 : 0);
+  try { return new Intl.NumberFormat('ru-RU', {style:'currency', currency:cur, minimumFractionDigits:frac, maximumFractionDigits:frac}).format(n); }
+  catch(e){ return n.toFixed(frac) + ' ' + cur; }
+}
+function partsSum(e){ return (e.parts || []).reduce(function(s,p){ return s + (num(p.qty) || 1) * num(p.price); }, 0); }
+function total(e){ return num(e.labor) + partsSum(e); }
+function cat(e){ return CATS[e.cat] || CATS.other; }
+
+/* ---------- storage ---------- */
+function lsGet(k, d){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function cacheSave(){ lsSet('sk_entries', state.entries); lsSet('sk_reminders', state.reminders); lsSet('sk_profile', state.profile); lsSet('sk_gallery', state.gallery); }
+
+async function connect(){
+  state.mode = 'local';
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
+  try { await loadPhotos(); } catch(e){}
+  state.loaded = true; render();
+}
+
+async function saveEntry(id, data){
+  if (state.mode === 'cloud') await cloud.col.doc(id).set(data);
+  var o = Object.assign({}, data); o.id = id;
+  var i = state.entries.findIndex(function(e){ return e.id === id; });
+  if (i >= 0) state.entries[i] = o; else state.entries.push(o);
+  cacheSave(); render();
+}
+async function removeEntry(id){
+  if (state.mode === 'cloud') await cloud.col.doc(id).delete();
+  state.entries = state.entries.filter(function(e){ return e.id !== id; });
+  cacheSave(); render();
+}
+async function saveProfile(patch){
+  var p = Object.assign({}, state.profile, patch);
+  if (state.mode === 'cloud') await cloud.prof.set(p);
+  state.profile = p; cacheSave(); render();
+}
+async function saveReminder(id, data){
+  if (state.mode === 'cloud') await cloud.rem.doc(id).set(data);
+  var o = Object.assign({}, data); o.id = id;
+  var i = state.reminders.findIndex(function(r){ return r.id === id; });
+  if (i >= 0) state.reminders[i] = o; else state.reminders.push(o);
+  cacheSave(); render();
+}
+async function removeReminder(id){
+  if (state.mode === 'cloud') await cloud.rem.doc(id).delete();
+  state.reminders = state.reminders.filter(function(r){ return r.id !== id; });
+  cacheSave(); render();
+}
+
+/* ---------- derived ---------- */
+function sortedEntries(){
+  return state.entries.slice().sort(function(a,b){
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+}
+function matches(e, q){
+  if (!q) return true;
+  q = q.toLowerCase();
+  var hay = [e.title, e.shop, e.note, cat(e).n].concat((e.parts || []).map(function(p){ return p.name; })).join(' ').toLowerCase();
+  return hay.indexOf(q) >= 0;
+}
+function stats(){
+  var es = state.entries;
+  var all = es.reduce(function(s,e){ return s + total(e); }, 0);
+  var c = new Date(); c.setDate(c.getDate() - 365); var cs = isoDate(c);
+  var year = es.filter(function(e){ return e.date >= cs; }).reduce(function(s,e){ return s + total(e); }, 0);
+  var odos = es.map(function(e){ return num(e.odo); }).filter(function(v){ return v > 0; });
+  var maxOdo = Math.max.apply(null, [0, num(state.profile.odo)].concat(odos));
+  var span = odos.length ? Math.max.apply(null, odos) - Math.min.apply(null, odos) : 0;
+  return {all:all, year:year, maxOdo:maxOdo, span:span, per1000: span >= 500 ? all / span * 1000 : null};
+}
+
+/* ---------- render ---------- */
+function render(){
+  $('#carName').textContent = state.profile.car || 'Моя машина';
+  var hi = $('.hero-img'), hs = customPhoto() || 'car-hero.jpg';
+  if (hi.getAttribute('src') !== hs) hi.setAttribute('src', hs);
+  var tag = String(state.profile.tag == null ? '' : state.profile.tag).trim();
+  $('#carTag').innerHTML = tag ? '<span class="tagpill">' + esc(tag) + '</span>' : '';
+  var st = stats();
+  var digits = String(Math.round(st.maxOdo)).padStart(6, '0').split('');
+  $('#odo').innerHTML = digits.map(function(d){ return '<span class="d">' + d + '</span>'; }).join('') + '<span class="unit">КМ</span>';
+  $('#ledger').innerHTML =
+    '<div><div class="k">Всего</div><div class="v">' + money(st.all, true) + '</div></div>' +
+    '<div><div class="k">За 12 мес.</div><div class="v">' + money(st.year, true) + '</div></div>' +
+    '<div><div class="k">На 1000 км</div><div class="v">' + (st.per1000 == null ? '—' : money(st.per1000, true)) + '</div></div>';
+  var nx = nextRem(), nr = $('#nextRem');
+  if (nx) { nr.hidden = false; nr.className = 'nextrem' + (nx.i.level === 2 ? ' late' : ''); nr.innerHTML = 'Ближайшее: <b>' + esc(nx.r.title) + '</b> — ' + esc(nx.i.text); }
+  else nr.hidden = true;
+  var fab = $('.fab'), onRem = state.tab === 'rem', onGallery = state.tab === 'gallery';
+  fab.hidden = onGallery; fab.dataset.act = onRem ? 'newrem' : 'new'; fab.textContent = onRem ? '+ Напоминание' : '+ Запись';
+  document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected', t.dataset.tab === state.tab ? 'true' : 'false'); });
+  $('#search').hidden = state.tab === 'stats' || state.tab === 'rem' || state.tab === 'gallery';
+  $('#foot').textContent = 'Всё хранится только на этом телефоне. Делайте резервную копию в разделе «Настройки».';
+  renderView();
+}
+
+function renderView(){
+  var v = $('#view');
+  if (!state.loaded && !state.entries.length) { v.innerHTML = '<p class="hint">Загружаю записи…</p>'; return; }
+  if (state.tab === 'rem') { v.innerHTML = viewRems(); return; }
+  if (state.tab === 'gallery') { v.innerHTML = viewGallery(); return; }
+  if (!state.entries.length) {
+    v.innerHTML = '<div class="empty"><h2>Книжка пока пустая</h2>' +
+      '<p>Записывайте каждую трату: дату, пробег, что купили и сколько заплатили. Итоги по месяцам и категориям появятся сами.</p>' +
+      '<div class="empty-actions"><button class="btn primary" data-act="new">Добавить первую запись</button>' +
+      '<button class="btn" data-act="demo">Показать примеры</button></div></div>';
+    return;
+  }
+  var demoBar = state.entries.some(function(e){ return e.demo; })
+    ? '<div class="demo-bar"><span>Часть записей — примеры.</span><button class="btn small" data-act="rmdemo">Удалить примеры</button></div>' : '';
+  if (state.tab === 'log') v.innerHTML = demoBar + viewLog();
+  else if (state.tab === 'parts') v.innerHTML = demoBar + viewParts();
+  else v.innerHTML = demoBar + viewStats();
+}
+
+function viewLog(){
+  var es = sortedEntries().filter(function(e){ return matches(e, state.q); });
+  if (!es.length) return '<p class="hint">Ничего не найдено.</p>';
+  var groups = [], cur = null;
+  es.forEach(function(e){
+    var k = e.date.slice(0,7);
+    if (!cur || cur.k !== k) { cur = {k:k, items:[], sum:0}; groups.push(cur); }
+    cur.items.push(e); cur.sum += total(e);
+  });
+  return groups.map(function(g){
+    return '<section class="month"><h2 class="month-h"><span>' + esc(monthTitle(g.k)) + '</span><span>' + money(g.sum) + '</span></h2><ul class="list">' +
+      g.items.map(entryRow).join('') + '</ul></section>';
+  }).join('');
+}
+function entryRow(e){
+  var c = cat(e), n = (e.parts || []).length;
+  var meta = [];
+  if (e.shop) meta.push(esc(e.shop));
+  if (n) meta.push(n + ' ' + plural(n, 'запчасть', 'запчасти', 'запчастей'));
+  var np = (e.parts || []).filter(function(p){ return p.photo; }).length;
+  if (np) meta.push(np + ' фото');
+  var odo = num(e.odo) > 0 ? ' · ' + fmtKm(num(e.odo)) + ' км' : '';
+  return '<li><button class="entry" data-id="' + esc(e.id) + '" style="--cat:var(' + c.c + ')">' +
+    '<span><span class="e-date">' + esc(fmtDate(e.date)) + odo + '</span>' +
+    '<span class="e-title">' + esc(e.title) + (e.demo ? ' <span class="tag-demo">пример</span>' : '') + '</span>' +
+    '<span class="e-meta"><span class="chip">' + esc(c.n) + '</span>' + (meta.length ? '<span>' + meta.join(' · ') + '</span>' : '') + '</span></span>' +
+    '<span class="e-sum">' + money(total(e)) + '</span></button></li>';
+}
+function plural(n, a, b, c){ var m = n % 100, d = n % 10; if (m > 10 && m < 20) return c; if (d === 1) return a; if (d >= 2 && d <= 4) return b; return c; }
+
+function allParts(){
+  var out = [];
+  state.entries.forEach(function(e){
+    (e.parts || []).forEach(function(p){ out.push({name:p.name, qty:num(p.qty) || 1, price:num(p.price), photo:p.photo || '', date:e.date, shop:e.shop, id:e.id, cat:e.cat, title:e.title}); });
+  });
+  return out.sort(function(a,b){ return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+}
+function viewParts(){
+  var q = state.q.toLowerCase();
+  var ps = allParts().filter(function(p){ return !q || (p.name + ' ' + (p.shop || '')).toLowerCase().indexOf(q) >= 0; });
+  if (!allParts().length) return '<p class="hint">Запчастей пока нет. Добавляйте их внутри записи, у каждой своя цена и количество.</p>';
+  if (!ps.length) return '<p class="hint">Ничего не найдено.</p>';
+  var sum = ps.reduce(function(s,p){ return s + p.qty * p.price; }, 0);
+  return '<div class="card" style="margin-bottom:12px"><div class="row"><span>' + (q ? 'Найдено на сумму' : 'Запчасти за всё время') + '</span><b style="font-variant-numeric:tabular-nums">' + money(sum) + '</b></div></div>' +
+    '<ul class="list">' + ps.map(function(p){
+      var c = CATS[p.cat] || CATS.other;
+      return '<li><button class="part-row" data-id="' + esc(p.id) + '"><span class="pm-row">' +
+        (p.photo ? '<img class="mini" data-act="viewphoto" data-photo="' + esc(p.photo) + '" data-entry="' + esc(p.id) + '" src="' + blobUrl(p.photo) + '" alt="Фото запчасти">' : '') +
+        '<span style="min-width:0"><span class="pn">' + esc(p.name) + '</span>' +
+        '<span class="pm" style="display:block">' + p.qty + ' × ' + money(p.price) + ' · ' + esc(fmtDate(p.date)) + (p.shop ? ' · ' + esc(p.shop) : '') + '</span></span></span>' +
+        '<span class="e-sum">' + money(p.qty * p.price) + '</span></button></li>';
+    }).join('') + '</ul>';
+}
+
+function viewStats(){
+  var st = stats();
+  var byCat = {}; Object.keys(CATS).forEach(function(k){ byCat[k] = 0; });
+  var labor = 0, parts = 0;
+  state.entries.forEach(function(e){
+    var k = CATS[e.cat] ? e.cat : 'other'; byCat[k] += total(e); labor += num(e.labor); parts += partsSum(e);
+  });
+  var catKeys = Object.keys(byCat).filter(function(k){ return byCat[k] > 0; }).sort(function(a,b){ return byCat[b] - byCat[a]; });
+  var maxC = Math.max.apply(null, catKeys.map(function(k){ return byCat[k]; }).concat([1]));
+  var catHtml = catKeys.map(function(k){
+    var share = st.all ? Math.round(byCat[k] / st.all * 100) : 0;
+    return '<div class="bar-row" style="--cat:var(' + CATS[k].c + ')"><span class="lbl">' + esc(CATS[k].n) + ' · ' + share + '%</span><span class="val">' + money(byCat[k], true) + '</span><div class="bar"><i style="width:' + (byCat[k] / maxC * 100) + '%"></i></div></div>';
+  }).join('');
+
+  var months = [], now = new Date();
+  for (var i = 0; i < 12; i++) { var d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push({k: d.getFullYear() + '-' + pad(d.getMonth()+1), d: d, v: 0}); }
+  state.entries.forEach(function(e){ var m = months.find(function(x){ return x.k === e.date.slice(0,7); }); if (m) m.v += total(e); });
+  var maxM = Math.max.apply(null, months.map(function(m){ return m.v; }).concat([1]));
+  var monHtml = months.map(function(m){
+    var lbl = m.d.toLocaleDateString('ru-RU', {month:'short', year:'numeric'}).replace(' г.','');
+    return '<button type="button" class="bar-row' + (m.k === effMonth() ? ' sel' : '') + '" data-month="' + m.k + '"><span class="lbl">' + esc(lbl) + '</span><span class="val">' + (m.v ? money(m.v, true) : '—') + '</span><span class="bar"><i style="width:' + (m.v / maxM * 100) + '%"></i></span></button>';
+  }).join('');
+
+  var ws = labor + parts;
+  var splitHtml = ws ? '<div class="split" role="img" aria-label="Доля работы и запчастей"><i style="width:' + (parts / ws * 100) + '%;background:var(--c-yellow)"></i><i style="width:' + (labor / ws * 100) + '%;background:var(--c-teal)"></i></div>' +
+    '<div class="legend"><span><span class="dot" style="background:var(--c-yellow)"></span>Запчасти <b>' + money(parts, true) + '</b></span><span><span class="dot" style="background:var(--c-teal)"></span>Работа <b>' + money(labor, true) + '</b></span></div>' : '';
+
+  var perNote = st.per1000 == null
+    ? 'Стоимость 1000 км посчитается, когда в записях будет разница в пробеге хотя бы 500 км.'
+    : 'Стоимость 1000 км: все траты, делённые на пробег между первой и последней записью (' + fmtKm(st.span) + ' км).';
+  return monthCard() + '<div class="card"><h2>По категориям</h2>' + (catHtml || '<p class="hint">Пока нет данных.</p>') + '</div>' +
+    '<div class="card"><h2>Работа и запчасти</h2>' + splitHtml + '<p class="note">' + esc(perNote) + '</p></div>' +
+    '<div class="card"><h2>Последние 12 месяцев</h2>' + monHtml + '</div>';
+}
+
+/* ---------- sheet ---------- */
+function openSheet(title, html){
+  resetArm();
+  $('#sheetTitle').textContent = title;
+  $('#sheetBody').innerHTML = html;
+  $('#sheet').hidden = false; $('#backdrop').hidden = false;
+  document.body.classList.add('lock');
+  $('#sheetBody').scrollTop = 0;
+}
+function closeSheet(){
+  $('#sheet').hidden = true; $('#backdrop').hidden = true;
+  document.body.classList.remove('lock');
+  resetArm(); abandonUploads();
+}
+function photoCtl(id){
+  if (id) {
+    return '<button type="button" class="thumb" data-act="viewphoto" data-photo="' + esc(id) + '" aria-label="Открыть фото"><img src="' + blobUrl(id) + '" alt="Фото запчасти"></button>' +
+      (assetsApi ? '<button type="button" class="btn small" data-act="pickphoto">Заменить</button><button type="button" class="btn small" data-act="rmphoto">Убрать фото</button>' : '');
+  }
+  return assetsApi ? '<button type="button" class="btn small" data-act="pickphoto">+ Фото</button>' : '';
+}
+function partRow(p){
+  p = p || {};
+  return '<div class="part-wrap" data-photo="' + esc(p.photo || '') + '"><div class="part"><input class="p-name" type="text" placeholder="Название" value="' + esc(p.name || '') + '" aria-label="Название запчасти">' +
+    '<input class="p-qty" type="text" inputmode="decimal" placeholder="1" value="' + esc(p.qty != null && p.qty !== '' ? p.qty : '') + '" aria-label="Количество">' +
+    '<input class="p-price" type="text" inputmode="decimal" placeholder="0" value="' + esc(p.price != null && p.price !== '' && p.price !== 0 ? p.price : '') + '" aria-label="Цена за штуку">' +
+    '<button type="button" class="x" data-act="rmpart" aria-label="Убрать запчасть">×</button></div>' +
+    '<div class="pp">' + photoCtl(p.photo) + '</div></div>';
+}
+function openEntry(id){
+  var ent = id ? state.entries.find(function(e){ return e.id === id; }) : null;
+  var v = ent || {date: today(), odo: '', cat: 'maint', title: '', shop: '', labor: '', parts: [], note: ''};
+  var last = sortedEntries().find(function(e){ return num(e.odo) > 0; });
+  var odoHint = !ent && last ? 'Последний: ' + fmtKm(num(last.odo)) : '';
+  var catOpts = Object.keys(CATS).map(function(k){ return '<option value="' + k + '"' + (v.cat === k ? ' selected' : '') + '>' + esc(CATS[k].n) + '</option>'; }).join('');
+  var hints = TITLE_HINTS.map(function(t){ return '<option value="' + esc(t) + '"></option>'; }).join('');
+  var html = '<form id="entryForm" data-id="' + esc(id || '') + '" novalidate>' +
+    '<div class="grid2"><label class="field"><span>Дата</span><input id="f-date" type="date" value="' + esc(v.date) + '"></label>' +
+    '<label class="field"><span>Пробег, км</span><input id="f-odo" type="text" inputmode="numeric" placeholder="' + esc(odoHint) + '" value="' + (num(v.odo) > 0 ? esc(v.odo) : '') + '"></label></div>' +
+    '<label class="field"><span>Категория</span><select id="f-cat">' + catOpts + '</select></label>' +
+    '<label class="field"><span>Что сделали или купили</span><input id="f-title" type="text" list="titleHints" placeholder="Например, замена масла" value="' + esc(v.title) + '"><datalist id="titleHints">' + hints + '</datalist></label>' +
+    '<div class="grid2"><label class="field"><span>Где</span><input id="f-shop" type="text" placeholder="Сервис или магазин" value="' + esc(v.shop || '') + '"></label>' +
+    '<label class="field"><span>Работа, ' + esc(state.profile.cur || 'BYN') + '</span><input id="f-labor" type="text" inputmode="decimal" placeholder="0" value="' + (num(v.labor) ? esc(v.labor) : '') + '"></label></div>' +
+    '<div class="parts-h"><span>Запчасти</span><button type="button" class="btn small" data-act="addpart">+ Добавить</button></div>' +
+    '<div class="cols-h"><span>Название</span><span>Кол-во</span><span>Цена за шт.</span><span></span></div>' +
+    '<div id="parts">' + (v.parts || []).map(partRow).join('') + '</div>' +
+    '<label class="field"><span>Заметка</span><textarea id="f-note" placeholder="Артикул, гарантия, что заметили">' + esc(v.note || '') + '</textarea></label>' +
+    '<div class="total"><span>Итого</span><span id="f-total"></span></div>' +
+    '<div class="actions"><button type="submit" class="btn primary" id="btnSave">Сохранить</button>' +
+    (ent ? '<button type="button" class="btn" data-act="canceledit" data-id="' + esc(id) + '">Отмена</button><button type="button" class="btn danger" data-act="del" data-id="' + esc(id) + '">Удалить</button>' : '') + '</div></form>';
+  openSheet(ent ? 'Редактирование' : 'Новая запись', html);
+  updateTotal();
+}
+function readParts(){
+  return Array.prototype.map.call(document.querySelectorAll('#parts .part-wrap'), function(r){
+    return {name: r.querySelector('.p-name').value.trim(), qty: num(r.querySelector('.p-qty').value) || 1, price: num(r.querySelector('.p-price').value), photo: r.dataset.photo || ''};
+  }).filter(function(p){ return p.name || p.price > 0 || p.photo; }).map(function(p){
+    var o = {name: p.name || 'Запчасть', qty: p.qty, price: p.price};
+    if (p.photo) o.photo = p.photo;
+    return o;
+  });
+}
+function updateTotal(){
+  var el = $('#f-total'); if (!el) return;
+  var t = num($('#f-labor').value) + readParts().reduce(function(s,p){ return s + p.qty * p.price; }, 0);
+  el.textContent = money(t);
+}
+async function submitEntry(form){
+  var id = form.dataset.id;
+  var old = id ? state.entries.find(function(e){ return e.id === id; }) : null;
+  var date = $('#f-date').value, title = $('#f-title').value.trim();
+  if (!date) { toast('Укажите дату'); return; }
+  if (!title) { toast('Напишите, что сделали или купили'); $('#f-title').focus(); return; }
+  var data = {date: date, odo: num($('#f-odo').value), cat: $('#f-cat').value, title: title, shop: $('#f-shop').value.trim(),
+    labor: num($('#f-labor').value), parts: readParts(), note: $('#f-note').value.trim(), createdAt: old && old.createdAt ? old.createdAt : Date.now()};
+  var btn = $('#btnSave'); btn.disabled = true;
+  try {
+    await saveEntry(id || newId(), data);
+    var keep = photoIds(data);
+    var gone = photoIds(old).concat(formUploads).filter(function(x){ return keep.indexOf(x) < 0; });
+    formUploads = [];
+    dropPhotos(gone);
+    if (id) openDetail(id); else closeSheet();
+    toast('Сохранено');
+  }
+  catch(e){ btn.disabled = false; toast('Не удалось сохранить. Попробуйте ещё раз.'); }
+}
+/* ---------- delete + photo cleanup ---------- */
+var formUploads = [];
+var delArm = {id: null, t: null, btn: null, kind: ''};
+function photoIds(e){ return ((e && e.parts) || []).map(function(p){ return p.photo; }).filter(Boolean); }
+function photoInUse(id){ return state.entries.some(function(e){ return photoIds(e).indexOf(id) >= 0; }); }
+async function dropPhotos(ids){
+  if (!assetsApi || !ids || !ids.length) return;
+  for (var i = 0; i < ids.length; i++) {
+    if (photoInUse(ids[i])) continue;
+    try { await assetsApi.delete(ids[i]); } catch(e){}
+  }
+}
+function abandonUploads(){
+  var u = formUploads; formUploads = [];
+  if (u.length) dropPhotos(u);
+}
+function resetArm(){
+  clearTimeout(delArm.t);
+  if (delArm.btn && delArm.btn.isConnected) { delArm.btn.textContent = 'Удалить'; delArm.btn.classList.remove('armed'); }
+  delArm.id = null; delArm.btn = null; delArm.kind = '';
+}
+function armDelete(btn, id, kind){
+  if (!id) return;
+  kind = kind || 'entry';
+  if (delArm.id === id && delArm.kind === kind) { resetArm(); if (kind === 'rem') doDeleteRem(id); else doDelete(id); return; }
+  resetArm();
+  delArm.id = id; delArm.kind = kind; delArm.btn = btn;
+  btn.textContent = 'Точно удалить?'; btn.classList.add('armed');
+  delArm.t = setTimeout(resetArm, 4000);
+}
+async function doDelete(id){
+  var e = state.entries.find(function(x){ return x.id === id; });
+  var photos = photoIds(e);
+  try { await removeEntry(id); }
+  catch(err){ toast('Не удалось удалить'); return; }
+  closeSheet(); toast('Запись удалена'); dropPhotos(photos);
+}
+
+function openSettings(){
+  var curOpts = CURRENCIES.map(function(c){ return '<option' + (state.profile.cur === c ? ' selected' : '') + '>' + c + '</option>'; }).join('');
+  var html = '<form id="setForm" novalidate>' +
+    '<label class="field"><span>Название машины</span><input id="s-car" type="text" value="' + esc(state.profile.car || '') + '"></label>' +
+    '<label class="field"><span>Метка под названием</span><input id="s-tag" type="text" placeholder="Например, Арлекино" value="' + esc(state.profile.tag == null ? '' : state.profile.tag) + '"></label>' +
+    '<div class="grid2"><label class="field"><span>Валюта</span><select id="s-cur">' + curOpts + '</select></label>' +
+    '<label class="field"><span>Текущий пробег, км</span><input id="s-odo" type="text" inputmode="numeric" value="' + (num(state.profile.odo) > 0 ? esc(state.profile.odo) : '') + '"></label></div>' +
+    '<div class="actions"><button type="submit" class="btn primary">Сохранить</button></div>' +
+    '<div class="actions" style="margin-top:16px"><button type="button" class="btn" data-act="carphoto">Фото машины</button>' +
+    (customPhoto() ? '<button type="button" class="btn" data-act="rmcarphoto">Стандартное фото</button>' : '') + '</div>' +
+    '<div class="actions" style="margin-top:8px">' +
+    (downloadsApi ? '<button type="button" class="btn" data-act="csv">Таблица CSV</button><button type="button" class="btn" data-act="backup">Резервная копия</button>' : '') +
+    '<button type="button" class="btn" data-act="restore">Восстановить из копии</button></div></form>';
+  openSheet('Настройки', html);
+}
+async function submitSettings(){
+  var p = {car: $('#s-car').value.trim() || 'Моя машина', tag: $('#s-tag').value.trim(), cur: $('#s-cur').value, odo: num($('#s-odo').value)};
+  try { await saveProfile(p); closeSheet(); toast('Сохранено'); } catch(e){ toast('Не удалось сохранить'); }
+}
+function csvCell(v){ var s = String(v == null ? '' : v); return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+async function exportCsv(){
+  if (!downloadsApi) return;
+  var rows = [['Дата','Пробег, км','Категория','Что сделали','Где','Работа','Запчасти','Итого','Заметка']];
+  state.entries.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; }).forEach(function(e){
+    var ps = (e.parts || []).map(function(p){ return p.name + ' ×' + (num(p.qty) || 1) + ' по ' + num(p.price); }).join('; ');
+    rows.push([e.date, num(e.odo) || '', cat(e).n, e.title, e.shop || '', num(e.labor), ps, total(e).toFixed(2), e.note || '']);
+  });
+  var csv = '﻿' + rows.map(function(r){ return r.map(csvCell).join(';'); }).join('\r\n');
+  try { await downloadsApi.save({filename: 'servisnaya-knizhka.csv', data: csv}); }
+  catch(e){ if (!e || e.code !== 'declined') toast('Не удалось сохранить файл'); }
+}
+
+/* ---------- examples ---------- */
+function daysAgo(n){ var d = new Date(); d.setDate(d.getDate() - n); return isoDate(d); }
+async function seedDemo(){
+  var items = [
+    {date: daysAgo(9),  odo: 248300, cat:'maint',  title:'Замена масла и фильтров', shop:'Пример: сервис', labor: 60, parts:[{name:'Масло 5W-40, 4 л', qty:1, price:118},{name:'Масляный фильтр', qty:1, price:14},{name:'Воздушный фильтр', qty:1, price:22}], note:''},
+    {date: daysAgo(41), odo: 246900, cat:'repair', title:'Замена передних колодок', shop:'Пример: сервис', labor: 80, parts:[{name:'Колодки передние', qty:1, price:96}], note:''},
+    {date: daysAgo(76), odo: 245200, cat:'tires',  title:'Сезонная смена колёс', shop:'Пример: шиномонтаж', labor: 70, parts:[], note:''},
+    {date: daysAgo(118),odo: 242800, cat:'parts',  title:'Лямбда-зонд', shop:'Пример: магазин', labor: 0, parts:[{name:'Лямбда-зонд', qty:1, price:185},{name:'Прокладка', qty:2, price:6.5}], note:''}
+  ];
+  try {
+    for (var i = 0; i < items.length; i++) { var o = items[i]; o.demo = true; o.createdAt = Date.now() + i; await saveEntry(newId(), o); }
+  } catch(e){ toast('Не удалось добавить примеры'); }
+}
+async function removeDemo(){
+  var demo = state.entries.filter(function(e){ return e.demo; });
+  var ids = demo.map(function(e){ return e.id; });
+  var photos = demo.reduce(function(a, e){ return a.concat(photoIds(e)); }, []);
+  try { for (var i = 0; i < ids.length; i++) { await removeEntry(ids[i]); } toast('Примеры удалены'); dropPhotos(photos); }
+  catch(e){ toast('Не удалось удалить примеры'); }
+}
+
+/* ---------- photos ---------- */
+function shrink(file, maxSide, q){
+  maxSide = maxSide || 1600; q = q || 0.82;
+  return new Promise(function(resolve, reject){
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function(){
+      var w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, maxSide / Math.max(w, h));
+      w = Math.round(w * k); h = Math.round(h * k);
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      c.toBlob(function(b){ b ? resolve(b) : reject(new Error('blob')); }, 'image/jpeg', q);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('image')); };
+    img.src = url;
+  });
+}
+function photoError(e){
+  var c = e && e.code;
+  if (c === 'too_large') return 'Фото слишком большое';
+  if (c === 'quota_or_state') return 'Место для фото закончилось';
+  if (c === 'rate_limited') return 'Слишком часто, подождите немного';
+  return 'Не удалось загрузить фото';
+}
+var lb = {items: [], i: 0, zoom: false};
+function lbItemsFor(entryId, photoId){
+  var e = entryId ? state.entries.find(function(x){ return x.id === entryId; }) : null;
+  var items = e ? (e.parts || []).filter(function(p){ return p.photo; }).map(function(p){ return {id: p.photo, cap: p.name}; }) : [];
+  var i = items.findIndex(function(x){ return x.id === photoId; });
+  if (i < 0) { items = [{id: photoId, cap: ''}]; i = 0; }
+  return {items: items, i: i};
+}
+function lbShow(){
+  var it = lb.items[lb.i]; if (!it) return;
+  $('#lightboxImg').src = blobUrl(it.id);
+  $('#lbCap').textContent = (it.cap || '') + (lb.items.length > 1 ? (it.cap ? '  ·  ' : '') + (lb.i + 1) + ' из ' + lb.items.length : '');
+  $('#lbStage').classList.toggle('zoom', lb.zoom);
+  $('#lbStage').scrollTop = 0; $('#lbStage').scrollLeft = 0;
+  $('#lightbox').classList.toggle('multi', lb.items.length > 1);
+}
+function lbStep(d){ if (lb.items.length < 2) return; lb.i = (lb.i + d + lb.items.length) % lb.items.length; lb.zoom = false; lbShow(); }
+function openLightbox(items, i){ if (!items || !items.length) return; lb.items = items; lb.i = i || 0; lb.zoom = false; lbShow(); $('#lightbox').hidden = false; }
+function closeLightbox(){ $('#lightbox').hidden = true; $('#lightboxImg').removeAttribute('src'); }
+
+function openDetail(id){
+  var e = state.entries.find(function(x){ return x.id === id; });
+  if (!e) return;
+  var c = cat(e), ps = e.parts || [], labor = num(e.labor), psum = partsSum(e);
+  function kv(k, v, cls){ return '<div class="kv' + (cls ? ' ' + cls : '') + '"><dt>' + k + '</dt><dd>' + v + '</dd></div>'; }
+  var info = '<dl class="kvs">' + kv('Дата', esc(fmtDate(e.date))) +
+    (num(e.odo) > 0 ? kv('Пробег', fmtKm(num(e.odo)) + ' км') : '') +
+    (e.shop ? kv('Где', esc(e.shop)) : '') + '</dl>';
+  var cost = '<dl class="kvs">' + (labor ? kv('Работа', money(labor)) : '') + (ps.length ? kv('Запчасти', money(psum)) : '') + kv('Итого', money(total(e)), 'sum') + '</dl>';
+  var partsHtml = '';
+  if (ps.length) {
+    partsHtml = '<h3 class="dh">Запчасти</h3><ul class="list">' + ps.map(function(p){
+      var q = num(p.qty) || 1;
+      return '<li class="dpart"><div class="dp-row"><span class="dp-name">' + esc(p.name) + '</span><span class="e-sum">' + money(q * num(p.price)) + '</span></div>' +
+        '<div class="pm" style="font-size:13px;color:var(--muted);margin-top:2px">' + q + ' × ' + money(num(p.price)) + '</div>' +
+        (p.photo ? '<button type="button" class="dphoto" data-act="viewphoto" data-photo="' + esc(p.photo) + '" data-entry="' + esc(e.id) + '" aria-label="Открыть фото"><img src="' + blobUrl(p.photo) + '" alt="Фото: ' + esc(p.name) + '"></button>' : '') +
+        '</li>';
+    }).join('') + '</ul>';
+  }
+  var noteHtml = e.note ? '<h3 class="dh">Заметка</h3><p class="d-note">' + esc(e.note) + '</p>' : '';
+  var html = '<div class="d-top" style="--cat:var(' + c.c + ')"><span class="chip">' + esc(c.n) + '</span>' + (e.demo ? '<span class="tag-demo">пример</span>' : '') + '</div>' +
+    '<h3 class="d-title">' + esc(e.title) + '</h3>' + info + cost + partsHtml + noteHtml +
+    '<div class="actions" style="margin-top:20px"><button type="button" class="btn primary" data-act="edit" data-id="' + esc(e.id) + '">Редактировать</button><button type="button" class="btn danger" data-act="del" data-id="' + esc(e.id) + '">Удалить</button></div>';
+  openSheet('Запись', html);
+}
+
+/* ---------- car photo ---------- */
+function customPhoto(){ var p = state.profile; return p.photo ? blobUrl(p.photo) : (p.photoData || ''); }
+function blobToDataUrl(b){
+  return new Promise(function(res, rej){ var fr = new FileReader(); fr.onload = function(){ res(fr.result); }; fr.onerror = rej; fr.readAsDataURL(b); });
+}
+async function smallDataUrl(file){
+  var sizes = [1000, 800, 640, 480];
+  for (var i = 0; i < sizes.length; i++) {
+    var d = await blobToDataUrl(await shrink(file, sizes[i], 0.72));
+    if (d.length <= 190000) return d;
+  }
+  var e = new Error('too big'); e.code = 'too_large'; throw e;
+}
+async function dropAsset(id){ if (!assetsApi || !id) return; try { await assetsApi.delete(id); } catch(e){} }
+async function setCarPhoto(f){
+  toast('Загружаю фото…');
+  var oldId = state.profile.photo;
+  try {
+    if (assetsApi) {
+      var res = await assetsApi.upload(await shrink(f, 1600, 0.84), {type: 'image/jpeg'});
+      await saveProfile({photo: res.id, photoData: ''});
+      if (oldId && oldId !== res.id) dropAsset(oldId);
+    } else {
+      await saveProfile({photo: '', photoData: await smallDataUrl(f)});
+    }
+    closeSheet(); toast('Фото машины обновлено');
+  } catch(e){ toast(photoError(e)); }
+}
+async function resetCarPhoto(){
+  var oldId = state.profile.photo;
+  try { await saveProfile({photo: '', photoData: ''}); closeSheet(); toast('Вернул стандартное фото'); if (oldId) dropAsset(oldId); }
+  catch(e){ toast('Не удалось вернуть фото'); }
+}
+
+/* ---------- reminders ---------- */
+function remInfo(r){
+  var odo = stats().maxOdo, level = 0, txt = [], left = null, days = null;
+  if (num(r.dueKm) > 0) {
+    left = num(r.dueKm) - odo;
+    txt.push(left >= 0 ? 'через ' + fmtKm(left) + ' км' : 'просрочено на ' + fmtKm(-left) + ' км');
+    if (left < 0) level = 2; else if (left <= 500) level = Math.max(level, 1);
+  }
+  if (r.dueDate) {
+    days = Math.round((parseDate(r.dueDate) - parseDate(today())) / 864e5);
+    txt.push(days > 0 ? 'через ' + days + ' ' + plural(days, 'день', 'дня', 'дней') : days === 0 ? 'сегодня' : 'просрочено на ' + (-days) + ' ' + plural(-days, 'день', 'дня', 'дней'));
+    if (days < 0) level = 2; else if (days <= 14) level = Math.max(level, 1);
+  }
+  var rank = Math.min(left != null ? left : 1e9, days != null ? days * 30 : 1e9);
+  return {text: txt.join(' · '), level: level, rank: rank};
+}
+function nextRem(){
+  var list = state.reminders.filter(function(r){ return !r.done; }).map(function(r){ return {r: r, i: remInfo(r)}; });
+  if (!list.length) return null;
+  list.sort(function(a, b){ return a.i.level !== b.i.level ? b.i.level - a.i.level : a.i.rank - b.i.rank; });
+  return list[0];
+}
+function remRow(r, info){
+  var col = info ? (info.level === 2 ? '--c-red' : info.level === 1 ? '--c-yellow' : '--c-teal') : '--c-grey';
+  var status = info ? (info.text || 'без срока') : 'выполнено' + (r.doneAt ? ' ' + fmtDate(r.doneAt) : '');
+  var rep = num(r.repeatKm) > 0 ? '<span>каждые ' + fmtKm(num(r.repeatKm)) + ' км</span>' : '';
+  return '<li><button class="entry" data-rid="' + esc(r.id) + '" style="--cat:var(' + col + ')"><span>' +
+    '<span class="e-title" style="margin-top:0">' + esc(r.title) + '</span>' +
+    '<span class="e-meta"><span class="chip">' + esc(status) + '</span>' + rep + '</span></span></button></li>';
+}
+function viewRems(){
+  if (!state.reminders.length) {
+    return '<div class="empty"><h2>Напоминаний пока нет</h2><p>Например, замена масла через 10 000 км или страховка до конкретной даты. Приложение покажет, сколько осталось.</p>' +
+      '<div class="empty-actions"><button class="btn primary" data-act="newrem">Добавить напоминание</button></div></div>';
+  }
+  var act = state.reminders.filter(function(r){ return !r.done; }).map(function(r){ return {r: r, i: remInfo(r)}; })
+    .sort(function(a, b){ return a.i.level !== b.i.level ? b.i.level - a.i.level : a.i.rank - b.i.rank; });
+  var done = state.reminders.filter(function(r){ return r.done; }).sort(function(a, b){ return (a.doneAt || '') < (b.doneAt || '') ? 1 : -1; });
+  var h = '';
+  if (act.length) h += '<section class="month"><h2 class="month-h"><span>Активные</span><span>' + act.length + '</span></h2><ul class="list">' + act.map(function(x){ return remRow(x.r, x.i); }).join('') + '</ul></section>';
+  else h += '<p class="hint">Активных напоминаний нет.</p>';
+  if (done.length) h += '<section class="month"><h2 class="month-h"><span>Выполненные</span><span>' + done.length + '</span></h2><ul class="list">' + done.map(function(r){ return remRow(r, null); }).join('') + '</ul></section>';
+  return h;
+}
+function openRemDetail(id){
+  var r = state.reminders.find(function(x){ return x.id === id; }); if (!r) return;
+  function kv(k, v){ return '<div class="kv"><dt>' + k + '</dt><dd>' + v + '</dd></div>'; }
+  var info = remInfo(r);
+  var rows = (num(r.dueKm) > 0 ? kv('На пробеге', fmtKm(num(r.dueKm)) + ' км') : '') + (r.dueDate ? kv('До даты', esc(fmtDate(r.dueDate))) : '') +
+    (num(r.repeatKm) > 0 ? kv('Повтор', 'каждые ' + fmtKm(num(r.repeatKm)) + ' км') : '') +
+    (r.done ? kv('Выполнено', esc(r.doneAt ? fmtDate(r.doneAt) : '—')) : kv('Осталось', esc(info.text || '—'))) +
+    (r.lastDone ? kv('Прошлый раз', esc(fmtDate(r.lastDone))) : '');
+  var h = '<h3 class="d-title">' + esc(r.title) + '</h3><dl class="kvs">' + rows + '</dl>' + (r.note ? '<h3 class="dh">Заметка</h3><p class="d-note">' + esc(r.note) + '</p>' : '') +
+    '<div class="actions" style="margin-top:20px">' +
+    (r.done ? '<button type="button" class="btn primary" data-act="remundo" data-id="' + esc(r.id) + '">Вернуть в активные</button>'
+            : '<button type="button" class="btn primary" data-act="remdone" data-id="' + esc(r.id) + '">Выполнено</button>') +
+    '<button type="button" class="btn" data-act="editrem" data-id="' + esc(r.id) + '">Редактировать</button>' +
+    '<button type="button" class="btn danger" data-act="del" data-kind="rem" data-id="' + esc(r.id) + '">Удалить</button></div>';
+  openSheet('Напоминание', h);
+}
+function openReminder(id){
+  var r = id ? state.reminders.find(function(x){ return x.id === id; }) : null;
+  var v = r || {title: '', dueKm: '', dueDate: '', repeatKm: '', note: ''};
+  var odo = stats().maxOdo;
+  var html = '<form id="remForm" data-id="' + esc(id || '') + '" novalidate>' +
+    '<label class="field"><span>Что нужно сделать</span><input id="r-title" type="text" placeholder="Например, замена масла" value="' + esc(v.title) + '"></label>' +
+    '<div class="grid2"><label class="field"><span>На пробеге, км</span><input id="r-km" type="text" inputmode="numeric" placeholder="' + (odo > 0 ? 'Сейчас ' + esc(fmtKm(odo)) : '') + '" value="' + (num(v.dueKm) > 0 ? esc(v.dueKm) : '') + '"></label>' +
+    '<label class="field"><span>Или до даты</span><input id="r-date" type="date" value="' + esc(v.dueDate || '') + '"></label></div>' +
+    '<label class="field"><span>Повторять каждые, км</span><input id="r-rep" type="text" inputmode="numeric" placeholder="Необязательно" value="' + (num(v.repeatKm) > 0 ? esc(v.repeatKm) : '') + '"></label>' +
+    '<label class="field"><span>Заметка</span><textarea id="r-note" placeholder="Какое масло, где делали в прошлый раз">' + esc(v.note || '') + '</textarea></label>' +
+    '<div class="actions"><button type="submit" class="btn primary" id="btnSaveRem">Сохранить</button>' +
+    (r ? '<button type="button" class="btn" data-act="cancelrem" data-id="' + esc(id) + '">Отмена</button>' : '') + '</div></form>';
+  openSheet(r ? 'Редактирование' : 'Новое напоминание', html);
+}
+async function submitReminder(form){
+  var id = form.dataset.id, old = id ? state.reminders.find(function(x){ return x.id === id; }) : null;
+  var title = $('#r-title').value.trim(), km = num($('#r-km').value), date = $('#r-date').value;
+  if (!title) { toast('Напишите, что нужно сделать'); $('#r-title').focus(); return; }
+  if (!(km > 0) && !date) { toast('Укажите пробег или дату'); return; }
+  var data = {title: title, dueKm: km, dueDate: date || '', repeatKm: num($('#r-rep').value), note: $('#r-note').value.trim(),
+    done: old ? !!old.done : false, doneAt: old && old.doneAt ? old.doneAt : '', lastDone: old && old.lastDone ? old.lastDone : ''};
+  var btn = $('#btnSaveRem'); btn.disabled = true;
+  var rid = id || newId();
+  try { await saveReminder(rid, data); closeSheet(); toast('Сохранено'); if (id) openRemDetail(rid); }
+  catch(e){ btn.disabled = false; toast('Не удалось сохранить'); }
+}
+async function markDone(id, undo){
+  var r = state.reminders.find(function(x){ return x.id === id; }); if (!r) return;
+  var data = Object.assign({}, r); delete data.id;
+  try {
+    if (undo) { data.done = false; data.doneAt = ''; await saveReminder(id, data); toast('Вернул в активные'); }
+    else if (num(r.repeatKm) > 0) {
+      var nk = stats().maxOdo + num(r.repeatKm);
+      data.dueKm = nk; data.dueDate = ''; data.lastDone = today();
+      await saveReminder(id, data); toast('Следующий раз на ' + fmtKm(nk) + ' км');
+    } else { data.done = true; data.doneAt = today(); await saveReminder(id, data); toast('Отмечено выполненным'); }
+    closeSheet();
+  } catch(e){ toast('Не удалось сохранить'); }
+}
+async function doDeleteRem(id){
+  try { await removeReminder(id); } catch(err){ toast('Не удалось удалить'); return; }
+  closeSheet(); toast('Напоминание удалено');
+}
+
+/* ---------- expenses by month ---------- */
+function stepMonth(key, d){ var p = key.split('-').map(Number); var x = new Date(p[0], p[1] - 1 + d, 1); return x.getFullYear() + '-' + pad(x.getMonth() + 1); }
+function defaultMonth(){
+  var cur = today().slice(0, 7);
+  if (state.entries.some(function(e){ return e.date.slice(0, 7) === cur; })) return cur;
+  var ms = state.entries.map(function(e){ return e.date.slice(0, 7); }).sort();
+  return ms.length ? ms[ms.length - 1] : cur;
+}
+function effMonth(){ return state.expMonth || defaultMonth(); }
+function monthCard(){
+  var k = effMonth(), tot = 0, labor = 0, parts = 0, byCat = {}, n = 0;
+  state.entries.forEach(function(e){
+    if (e.date.slice(0, 7) !== k) return;
+    var ck = CATS[e.cat] ? e.cat : 'other';
+    n++; tot += total(e); labor += num(e.labor); parts += partsSum(e); byCat[ck] = (byCat[ck] || 0) + total(e);
+  });
+  var keys = Object.keys(byCat).filter(function(c){ return byCat[c] > 0; }).sort(function(a, b){ return byCat[b] - byCat[a]; });
+  var mx = Math.max.apply(null, keys.map(function(c){ return byCat[c]; }).concat([1]));
+  var h = '<div class="card" id="monthCard"><h2>Расходы за месяц</h2><div class="mnav"><button type="button" class="btn small" data-act="mprev" aria-label="Предыдущий месяц">‹</button><b>' + esc(monthTitle(k)) + '</b><button type="button" class="btn small" data-act="mnext" aria-label="Следующий месяц">›</button></div>';
+  if (!n) return h + '<p class="hint" style="padding:12px 0 4px">В этом месяце трат нет.</p></div>';
+  h += '<div class="mtotal">' + money(tot, true) + '</div><p class="note" style="margin:0 0 10px">' + n + ' ' + plural(n, 'запись', 'записи', 'записей') + '</p>';
+  var ws = labor + parts;
+  if (ws) h += '<div class="split" role="img" aria-label="Доля работы и запчастей"><i style="width:' + (parts / ws * 100) + '%;background:var(--c-yellow)"></i><i style="width:' + (labor / ws * 100) + '%;background:var(--c-teal)"></i></div>' +
+    '<div class="legend"><span><span class="dot" style="background:var(--c-yellow)"></span>Запчасти <b>' + money(parts, true) + '</b></span><span><span class="dot" style="background:var(--c-teal)"></span>Работа <b>' + money(labor, true) + '</b></span></div>';
+  h += '<div style="margin-top:14px">' + keys.map(function(c){
+    var share = tot ? Math.round(byCat[c] / tot * 100) : 0;
+    return '<div class="bar-row" style="--cat:var(' + CATS[c].c + ')"><span class="lbl">' + esc(CATS[c].n) + ' · ' + share + '%</span><span class="val">' + money(byCat[c], true) + '</span><div class="bar"><i style="width:' + (byCat[c] / mx * 100) + '%"></i></div></div>';
+  }).join('') + '</div></div>';
+  return h;
+}
+
+/* ---------- car gallery ---------- */
+function viewGallery(){
+  var items = state.gallery.slice().sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+  var h = '<div class="gallery-head"><div><h2 style="margin:0">Галерея машины</h2><p class="hint" style="margin:4px 0 0">Фото кузова, салона, деталей и ремонтов</p></div><button class="btn primary" data-act="addgallery">+ Фото</button></div>';
+  if (!items.length) return h + '<div class="gallery-empty"><h3 style="margin:0 0 6px;color:var(--ink)">Пока нет фотографий</h3><p style="margin:0 0 14px">Добавь фото своего Golf IV Harlekin — они останутся в приложении.</p><button class="btn primary" data-act="addgallery">Добавить фотографии</button></div>';
+  h += '<div class="gallery-grid">' + items.map(function(it){
+    var src = blobUrl(it.photo);
+    return '<article class="gallery-card"><button type="button" style="display:block;width:100%;padding:0;border:0;background:transparent" data-act="galleryview" data-photo="'+esc(it.photo)+'" aria-label="Открыть '+esc(it.title||'фото')+'"><img src="'+src+'" alt="'+esc(it.title||'Фото автомобиля')+'" loading="lazy"></button><div class="gallery-meta"><div class="gallery-title">'+esc(it.title||'Фото автомобиля')+'</div><div class="gallery-sub">'+esc(it.category||'Общее')+' · '+esc(fmtDate(it.date||today()))+'</div>'+(it.note?'<div class="gallery-sub">'+esc(it.note)+'</div>':'')+'<div class="gallery-actions"><button class="btn" data-act="editgallery" data-id="'+esc(it.id)+'">Изменить</button><button class="btn danger" data-act="delgallery" data-id="'+esc(it.id)+'">Удалить</button></div></div></article>';
+  }).join('') + '</div>';
+  return h;
+}
+function openGalleryForm(id){
+  var it = id ? state.gallery.find(function(x){return x.id===id;}) : null;
+  var html = '<form id="galleryForm" data-id="'+esc(it?it.id:'')+'">'+
+    '<label class="gallery-label" for="galleryTitle">Название</label><input class="gallery-input" id="galleryTitle" name="title" maxlength="100" placeholder="Например, передний бампер" value="'+esc(it?it.title:'')+'">'+
+    '<label class="gallery-label" for="galleryCategory">Альбом</label><select class="gallery-input" id="galleryCategory" name="category"><option '+(!it||it.category==='Общее'?'selected':'')+'>Общее</option><option '+(it&&it.category==='Кузов'?'selected':'')+'>Кузов</option><option '+(it&&it.category==='Салон'?'selected':'')+'>Салон</option><option '+(it&&it.category==='Двигатель'?'selected':'')+'>Двигатель</option><option '+(it&&it.category==='Ходовая'?'selected':'')+'>Ходовая</option><option '+(it&&it.category==='Ремонт'?'selected':'')+'>Ремонт</option><option '+(it&&it.category==='Запчасти'?'selected':'')+'>Запчасти</option></select>'+
+    '<label class="gallery-label" for="galleryDate">Дата</label><input class="gallery-input" id="galleryDate" name="date" type="date" value="'+esc(it?it.date:today())+'">'+
+    '<label class="gallery-label" for="galleryNote">Заметка (необязательно)</label><textarea class="gallery-input" id="galleryNote" name="note" rows="3" maxlength="500" placeholder="Что изображено, состояние детали…">'+esc(it?it.note:'')+'</textarea>'+
+    '<label class="gallery-label">Фотография</label><p class="note">'+(it?'Текущее фото сохранится, если не выбрать новое. ':'')+'Можно выбрать несколько фото сразу.</p><div class="actions"><button type="button" class="btn" data-act="gallerychoose">'+(it?'Заменить фото':'Выбрать фото')+'</button><button type="submit" class="btn primary">Сохранить</button></div><div id="galleryPicked" class="note" style="margin-top:8px"></div></form>';
+  openSheet(it?'Изменить фото':'Добавить в галерею',html);
+  window.galleryEditingId = id || null; window.galleryPendingFiles = [];
+}
+async function saveGalleryForm(form){
+  var id=form.dataset.id || newId(), old=state.gallery.find(function(x){return x.id===id;}), files=window.galleryPendingFiles||[];
+  if (!old && !files.length){ toast('Сначала выбери фотографию'); return; }
+  var title=form.elements.title.value.trim(), category=form.elements.category.value, date=form.elements.date.value||today(), note=form.elements.note.value.trim();
+  try{
+    if(files.length){
+      var added=[];
+      for(var i=0;i<files.length;i++){
+        var blob=await shrink(files[i],1600,0.82), up=await assetsApi.upload(blob);
+        added.push({id: old && i===0 ? id : newId(), photo:up.id, title:title || (files.length>1?'Фото '+(i+1):'Фото автомобиля'), category:category, date:date, note:note, createdAt:Date.now()+i});
+      }
+      if(old){ state.gallery=state.gallery.filter(function(x){return x.id!==id;}); if(added.length) added[0].id=id; if(old.photo && (!added.length || old.photo!==added[0].photo)) dropAsset(old.photo); }
+      state.gallery=state.gallery.concat(added);
+    } else if(old){ old.title=title||'Фото автомобиля'; old.category=category; old.date=date; old.note=note; }
+    cacheSave(); closeSheet(); window.galleryPendingFiles=[]; state.tab='gallery'; render(); toast('Галерея сохранена');
+  }catch(e){ toast(photoError(e)); }
+}
+async function deleteGalleryItem(id){
+  var it=state.gallery.find(function(x){return x.id===id;}); if(!it)return;
+  if(!confirm('Удалить это фото из галереи?'))return;
+  state.gallery=state.gallery.filter(function(x){return x.id!==id;}); cacheSave(); await dropAsset(it.photo); render(); toast('Фото удалено');
+}
+
+/* ---------- backup ---------- */
+async function exportBackup(){
+  if (!downloadsApi) return;
+  var ids = {};
+  state.entries.forEach(function(e){ photoIds(e).forEach(function(x){ ids[x] = 1; }); });
+  state.gallery.forEach(function(g){ if(g.photo) ids[g.photo]=1; });
+  if (state.profile.photo) ids[state.profile.photo] = 1;
+  var photos = {};
+  for (var k in ids) { if (blobCache[k]) { try { photos[k] = await blobToDataUrl(blobCache[k].blob); } catch(e){} } }
+  var data = {app: 'servisnaya-knizhka', v: 2, exportedAt: new Date().toISOString(), profile: state.profile, entries: state.entries, reminders: state.reminders, gallery: state.gallery, photos: photos};
+  try { await downloadsApi.save({filename: 'servisnaya-knizhka-kopiya.json', data: JSON.stringify(data, null, 1)}); }
+  catch(e){ if (!e || e.code !== 'declined') toast('Не удалось сохранить файл'); }
+}
+function validEntry(e){ return e && typeof e === 'object' && typeof e.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && typeof e.title === 'string'; }
+function validRem(r){ return r && typeof r === 'object' && typeof r.title === 'string'; }
+function readRestoreFile(f){
+  var fr = new FileReader();
+  fr.onload = function(){
+    var o = null;
+    try { o = JSON.parse(String(fr.result).replace(/^﻿/, '')); } catch(e){}
+    if (!o || o.app !== 'servisnaya-knizhka' || !Array.isArray(o.entries)) { toast('Это не файл резервной копии книжки'); return; }
+    o.entries = o.entries.filter(validEntry);
+    o.reminders = Array.isArray(o.reminders) ? o.reminders.filter(validRem) : [];
+    o.gallery = Array.isArray(o.gallery) ? o.gallery.filter(function(g){return g && typeof g.photo==='string';}) : [];
+    o.photos = (o.photos && typeof o.photos === 'object') ? o.photos : {};
+    pendingRestore = o;
+    var n = o.entries.length, m = o.reminders.length;
+    openSheet('Восстановление', '<p style="margin:0 0 8px">В копии ' + n + ' ' + plural(n, 'запись', 'записи', 'записей') + ' и ' + m + ' ' + plural(m, 'напоминание', 'напоминания', 'напоминаний') + '.</p>' +
+      '<p class="note" style="margin:0 0 16px">Они добавятся к текущим. Если номер записи совпадает, она заменится версией из копии. Фото тоже вернутся, если они были в копии.</p>' +
+      '<div class="actions"><button type="button" class="btn primary" data-act="dorestore">Восстановить</button></div>');
+  };
+  fr.onerror = function(){ toast('Не удалось прочитать файл'); };
+  fr.readAsText(f);
+}
+async function doRestore(){
+  var o = pendingRestore; if (!o) return; pendingRestore = null;
+  try {
+    for (var pid in o.photos) {
+      var du = o.photos[pid];
+      if (typeof du === 'string' && /^data:image\//.test(du) && !blobCache[pid]) { await putPhoto(pid, await (await fetch(du)).blob()); }
+    }
+    for (var i = 0; i < o.entries.length; i++) { var e = Object.assign({}, o.entries[i]); var id = e.id || newId(); delete e.id; await saveEntry(id, e); }
+    for (var j = 0; j < o.reminders.length; j++) { var r = Object.assign({}, o.reminders[j]); var rid = r.id || newId(); delete r.id; await saveReminder(rid, r); }
+    if (o.gallery && o.gallery.length) { state.gallery=state.gallery.concat(o.gallery); cacheSave(); }
+    if (o.profile && typeof o.profile === 'object') await saveProfile(o.profile);
+    closeSheet(); toast('Восстановлено');
+  } catch(e){ toast('Не удалось восстановить всё. Попробуйте ещё раз.'); }
+}
+
+/* ---------- toast + events ---------- */
+var toastT = null;
+function toast(msg){
+  var t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(function(){ t.hidden = true; }, 2600);
+}
+
+document.addEventListener('click', function(ev){
+  if (ev.target.closest('#lightbox')) {
+    var la = ev.target.closest('[data-act]'), lact = la ? la.dataset.act : '';
+    if (lact === 'lbprev') lbStep(-1);
+    else if (lact === 'lbnext') lbStep(1);
+    else if (ev.target.id === 'lightboxImg') { lb.zoom = !lb.zoom; lbShow(); }
+    else closeLightbox();
+    return;
+  }
+  var tab = ev.target.closest('[data-tab]');
+  if (tab) { state.tab = tab.dataset.tab; render(); return; }
+  var act = ev.target.closest('[data-act]');
+  if (act) {
+    var a = act.dataset.act;
+    if (a === 'new') openEntry(null);
+    else if (a === 'addgallery') openGalleryForm(null);
+    else if (a === 'gallerychoose') { var gi = $('#galleryInput'); gi.value = ''; gi.click(); }
+    else if (a === 'editgallery') openGalleryForm(act.dataset.id);
+    else if (a === 'delgallery') deleteGalleryItem(act.dataset.id);
+    else if (a === 'galleryview') { var gp = act.dataset.photo; openLightbox([{id: gp, cap: (state.gallery.find(function(x){return x.photo===gp;})||{}).title || 'Фото автомобиля'}], 0); }
+    else if (a === 'close') closeSheet();
+    else if (a === 'settings') openSettings();
+    else if (a === 'demo') seedDemo();
+    else if (a === 'rmdemo') removeDemo();
+    else if (a === 'addpart') { $('#parts').insertAdjacentHTML('beforeend', partRow()); var rows = document.querySelectorAll('#parts .p-name'); rows[rows.length - 1].focus(); }
+    else if (a === 'rmpart') { act.closest('.part-wrap').remove(); updateTotal(); }
+    else if (a === 'pickphoto') { photoTarget = act.closest('.part-wrap'); var pi = $('#photoInput'); pi.value = ''; pi.click(); }
+    else if (a === 'rmphoto') { var w = act.closest('.part-wrap'); w.dataset.photo = ''; w.querySelector('.pp').innerHTML = photoCtl(''); }
+    else if (a === 'viewphoto') { var g = lbItemsFor(act.dataset.entry, act.dataset.photo); openLightbox(g.items, g.i); }
+    else if (a === 'edit') openEntry(act.dataset.id);
+    else if (a === 'canceledit') { abandonUploads(); openDetail(act.dataset.id); }
+    else if (a === 'del') armDelete(act, act.dataset.id, act.dataset.kind);
+    else if (a === 'csv') exportCsv();
+    else if (a === 'backup') exportBackup();
+    else if (a === 'restore') { var ri = $('#restoreInput'); ri.value = ''; ri.click(); }
+    else if (a === 'dorestore') doRestore();
+    else if (a === 'carphoto') { photoTarget = 'car'; var ci = $('#photoInput'); ci.value = ''; ci.click(); }
+    else if (a === 'rmcarphoto') resetCarPhoto();
+    else if (a === 'newrem') openReminder(null);
+    else if (a === 'editrem') openReminder(act.dataset.id);
+    else if (a === 'cancelrem') openRemDetail(act.dataset.id);
+    else if (a === 'remdone') markDone(act.dataset.id, false);
+    else if (a === 'remundo') markDone(act.dataset.id, true);
+    else if (a === 'gotorem') { state.tab = 'rem'; render(); }
+    else if (a === 'mprev') { state.expMonth = stepMonth(effMonth(), -1); render(); }
+    else if (a === 'mnext') { state.expMonth = stepMonth(effMonth(), 1); render(); }
+    return;
+  }
+  var mo = ev.target.closest('[data-month]');
+  if (mo) { state.expMonth = mo.dataset.month; render(); var mc = $('#monthCard'); if (mc && mc.scrollIntoView) mc.scrollIntoView({block: 'start'}); return; }
+  var rr = ev.target.closest('[data-rid]');
+  if (rr && rr.closest('#view')) { openRemDetail(rr.dataset.rid); return; }
+  var row = ev.target.closest('[data-id]');
+  if (row && row.closest('#view')) { openDetail(row.dataset.id); return; }
+  if (ev.target.id === 'backdrop') closeSheet();
+});
+document.addEventListener('submit', function(ev){
+  ev.preventDefault();
+  if (ev.target.id === 'entryForm') submitEntry(ev.target);
+  else if (ev.target.id === 'setForm') submitSettings();
+  else if (ev.target.id === 'galleryForm') saveGalleryForm(ev.target);
+  else if (ev.target.id === 'remForm') submitReminder(ev.target);
+});
+document.addEventListener('input', function(ev){
+  if (ev.target.closest && ev.target.closest('#entryForm')) updateTotal();
+});
+$('#search').addEventListener('input', function(ev){ state.q = ev.target.value.trim(); renderView(); });
+document.addEventListener('keydown', function(ev){
+  if (!$('#lightbox').hidden) { if (ev.key === 'ArrowLeft') lbStep(-1); else if (ev.key === 'ArrowRight') lbStep(1); }
+  if (ev.key !== 'Escape') return;
+  if (!$('#lightbox').hidden) closeLightbox(); else if (!$('#sheet').hidden) closeSheet();
+});
+var swipeX = null;
+$('#lbStage').addEventListener('touchstart', function(ev){ swipeX = lb.zoom ? null : ev.touches[0].clientX; }, {passive: true});
+$('#lbStage').addEventListener('touchend', function(ev){
+  if (swipeX == null) return;
+  var dx = ev.changedTouches[0].clientX - swipeX; swipeX = null;
+  if (Math.abs(dx) > 50) lbStep(dx < 0 ? 1 : -1);
+}, {passive: true});
+$('#galleryInput').addEventListener('change', function(ev){
+  var files=Array.prototype.slice.call(ev.target.files||[]).filter(function(f){return /^image\//i.test(f.type);});
+  if(!files.length)return;
+  var editing=window.galleryEditingId || null;
+  if(!document.querySelector('#galleryForm')) openGalleryForm(editing);
+  window.galleryPendingFiles=files;
+  var picked=$('#galleryPicked'); if(picked) picked.textContent=files.length+' фото выбрано';
+});
+$('#restoreInput').addEventListener('change', function(ev){ var f = ev.target.files && ev.target.files[0]; if (f) readRestoreFile(f); });
+$('#photoInput').addEventListener('change', async function(ev){
+  var f = ev.target.files && ev.target.files[0];
+  var wrap = photoTarget; photoTarget = null;
+  if (f && wrap === 'car') { setCarPhoto(f); return; }
+  if (!f || !wrap || !assetsApi) return;
+  var pp = wrap.querySelector('.pp');
+  pp.innerHTML = '<span class="note" style="margin:0">Загружаю фото…</span>';
+  try {
+    var blob = await shrink(f);
+    var res = await assetsApi.upload(blob, {type: 'image/jpeg'});
+    formUploads.push(res.id);
+    wrap.dataset.photo = res.id;
+    pp.innerHTML = photoCtl(res.id);
+  } catch(e){
+    pp.innerHTML = photoCtl(wrap.dataset.photo || '');
+    toast(photoError(e));
+  }
+});
+
+/* ---------- start ---------- */
+state.entries = lsGet('sk_entries', []);
+state.reminders = lsGet('sk_reminders', []);
+state.gallery = lsGet('sk_gallery', []);
+state.profile = Object.assign({}, DEF_PROFILE, lsGet('sk_profile', {}));
+render();
+connect();
+if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+})();
+</script>
+
+</body>
+</html>
